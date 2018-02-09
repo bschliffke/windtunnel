@@ -10,7 +10,7 @@ __all__ = [
     'plot_scatter',
     'plot_hist',
     'plot_turb_int',
-    'plot_fes',
+    'plot_fluxes',
     'plot_fluxes_log',
     'plot_winddata',
     'plot_winddata_log',

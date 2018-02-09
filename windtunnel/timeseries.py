@@ -165,7 +165,7 @@ class Timeseries():
         @parameter: filename, type = str
         @parameter: out_dir, type = str"""
         if out_dir is None:
-            out_dir = 'C:/Users/{0}/Desktop/LDA-Analysis/'.format(os.getlogin())
+            out_dir = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
 
