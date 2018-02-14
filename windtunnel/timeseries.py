@@ -15,7 +15,13 @@ class Timeseries():
     measurement as well as the mean wind magnitude and the mean wind direction.
     The raw timeseries can be processed by nondimensionalising it, adapting the
     scale, making it equidistant and masking outliers. All the information in
-    a Timeseries pbject can be saved to a txt file."""
+    a Timeseries pbject can be saved to a txt file.
+    @parameter: u, type = np.array
+    @parameter: v, type = np.array
+    @parameter: x, type = float
+    @parameter: y, type = float
+    @parameter: z, type = float
+    @parameter: t_arr, type = np.array"""
     def __init__(self,u,v,x=None,y=None,z=None,t_arr=None):
         """ Initialise Timerseries() object. """
         self.x = x
@@ -76,7 +82,8 @@ class Timeseries():
         self.wtref = all_wtrefs[index] * vscale
            
     def get_wind_comps(self,filename):
-        """ Get wind components of Timeseries. """
+        """ Get wind components from filename.
+        @parameter: filename, type = str """
         with open(filename) as file:
             for i, line in enumerate(file):
                 if i == 5:
@@ -95,7 +102,8 @@ class Timeseries():
         self.v = self.v/self.wtref
         
     def adapt_scale(self,scale):
-        """ To full scale. """
+        """ Convert timeseries from model scale to full scale. 
+        @parameter: scale, type = float"""
         self.scale = scale
         self.x = self.x * self.scale/1000           #[m]
         self.y = self.y * self.scale/1000           #[m]
@@ -109,7 +117,10 @@ class Timeseries():
         self.v = wt.equ_dist_ts(self.t_arr,self.t_eq,self.v)
         
     def mask_outliers(self,std_mask=5.):
-        """ Mask outliers and print number of outliers. """
+        """ Mask outliers and print number of outliers. std_mask specifies the
+        threshold for a value to be considered an outlier. 5 is the default 
+        value for std_mask.
+        @parameter: std_mask, type = float"""
         u_size = np.size(self.u)
         v_size = np.size(self.v)
 
@@ -135,9 +146,8 @@ class Timeseries():
         """ Calculate wind magnitude from components. """
         self.magnitude = np.sqrt(self.u**2 + self.v**2)
     
-    def calc_direction(self,wdir=0):
-        """ Calculate wind direction from components. wdir is a reference wind
-        direction. Default value for wdir is 0."""
+    def calc_direction(self):
+        """ Calculate wind direction from components. """
         unit_WD = np.arctan2(self.v,self.u) * 180/np.pi
         self.direction = (360 + unit_WD) % 360
         
@@ -150,9 +160,9 @@ class Timeseries():
         return np.mean(self.magnitude)
     
     @property   
-    def mean_direction(self,wdir=0):
-        """ Calculate mean wind direction from components with reference wind
-        direction wdir. Default value for wdir is 0."""
+    def mean_direction(self):
+        """ Calculate mean wind direction from components relative to the wind 
+        tunnels axis."""
         unit_WD = np.arctan2(np.mean(self.v),np.mean(self.u)) * 180/np.pi
         mean_direction = (360 + unit_WD) % 360
         
