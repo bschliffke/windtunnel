@@ -56,9 +56,9 @@ def get_ratio_referencedata():
     # TODO: finish this with new ref data
 
 
-# TODO: alpha/z0 ratio plot
-# TODO: errorbars
-# TODO: documentation and readme
+# TODO: alpha/z0 ratio plot (optional)
+# TODO: errorbars (with user defined error margins)
+# TODO: documentation (sphinx) and readme (github)
 
 
 #%%#
