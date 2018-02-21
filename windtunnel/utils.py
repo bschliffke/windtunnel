@@ -4,17 +4,24 @@ from scipy.spatial import KDTree as kdt
 from skimage.measure import label
 import pandas as pd
 import fnmatch
+import logging
 import os
 import scipy.stats as sc
 import windtunnel as wt
 
+logger = logging.getLogger()
 __all__ = [
     'find_block',
     'equ_dist_ts',
     'trunc_at',
     'get_files',
-    'read_BSA_files',
-    'read_wtref',
+    'from_file',
+    'get_wtref',
+    'get_wind_comps',
+    'nondimensionalise',
+    'adapt_scale',
+    'equidistant',
+    'mask_outliers',
     'get_pdf_max',
     'print_to_mill',
     'count_nan_chunks',
@@ -22,7 +29,6 @@ __all__ = [
     'get_turb_referencedata',
     'find_nearest',
     'get_reference_spectra',
-    'get_wind_comps',
 ]
 
 def find_block(indata, length, tolerance):    
@@ -44,9 +50,9 @@ def equ_dist_ts(arrival_time,eq_dist_array,data):
    """ Create a time series with constant time steps. The nearest point of the 
    original time series is used for the corresponding time of the equi-distant
    time series.
-   @parameter t: 
-   @parameter equ: np.array
-   @parameter data: np.array"""
+   @parameter: arrival_time, type = np.array 
+   @parameter: eq_dist_array, type = np.array
+   @parameter: data, type = np.array"""
    
    mask = ~np.isnan(data)
    data = data[mask]
@@ -59,11 +65,11 @@ def equ_dist_ts(arrival_time,eq_dist_array,data):
    return eq_data
 
 
-def trunc_at(s, d, n=3):
-    """ Returns s truncated at the n'th (3rd by default) occurrence of the
-    delimiter, d."""
+def trunc_at(string, delimiter, n=3):
+    """ Returns string truncated at the n'th (3rd by default) occurrence of the
+    delimiter."""
     
-    return d.join(s.split(d, n)[:n])
+    return delimiter.join(string.split(delimiter, n)[:n])
 
 
 def get_files(path, filename):
@@ -81,110 +87,134 @@ def get_files(path, filename):
     return return_files
 
 
-def read_BSA_files(path,filename,scale,std_mask = 5.,check_nc = False):
-    """Reads tab-separated standard output textfile of the BSA software and
-    the corresponding wind tunnel free velocity. Returns full-scale time
-    series using scale. Outliers greater than std_mask are masked in 
-    full-scale time series. std_mask is set to 5 as standard. Returns an
-    equidistant time series with lists of the quantities read.s
+def from_file(path,filename):
+    """ Create array from timeseries in path + file.
+    @parameter: path, string
+    @parameter: filename, string"""
+    with open(filename) as file:
+        for i, line in enumerate(file):
+            if i == 3:
+                x = float(line.split(";")[0][:-3])
+                y = float(line.split(";")[1][:-3])
+                z = float(line.split(";")[-1][:-3])
+                break
+
+    t_arr, u, v = np.genfromtxt(filename,usecols=(1,3,4),
+                                skip_header=6,unpack=True)
+    
+    return x,y,z,t_arr,u,v
+
+    
+def get_wtref(wtref_path,filename,index=0,vscale=1.):
+    """Reads wtref-file selected by the time series name 'filename' and
+    scales wtref with vscale. vscale is set to 1 as standard. index 
+    accesses only the one wtref value that is associated to the current
+    file.
     @parameter: path, type = string
     @parameter: filename, type = string
-    @parameter: scale, type = float
-    @parameter: std_mask, type = float
-    @parameter: check_nc, type  = boolean """
-    
-    _non_coi = False
-    # Checks necessary if files are measured in non-coincidence mode
-    if check_nc:
-        global wind_comp1, wind_comp2, trans1, trans2
-        _non_coi = True
-    with open(path+filename) as fp:
-       for i, line in enumerate(fp):
-           if i == 3:
-               x = float(line.split(";")[0][:-3])
-               y = float(line.split(";")[1][:-3])
-               z = float(line.split(";")[-1][:-3])
-           if check_nc:
-               if i == 5:
-                   if 'ft' in line:
-                       input(' ABORT! Imperial units detected. Please use metric SI units (BSA settings).')
-                       raise Exception('Imperial units are not valid')
-                   if 'LDA2' in line:
-                       _non_coi = True
-                       print('  ---   need additional input for non-coincidence mode  ---')
-                       wind_comp1 = input('Wind component for LDA1:  ').lower()
-                       trans1 = float(input('Transformation factor for LDA1:  '))
-                       wind_comp2 = input('Wind component for LDA2:  ').lower()
-                       trans2 = float(input('Transformation factor for LDA2:  '))
-                       print('  ---------------------------------------------------------')
-                   else:
-                       wind_comp1 = line.split()[-4][-1].lower()
-                       wind_comp2 = line.split()[-2][-1].lower()
-                   break
-    if _non_coi:
-        t_arr1, lda1, t_arr2, lda2 = np.genfromtxt(path+filename,
-                                                   usecols=(1,3,4,6), 
-                                                   skip_header=6,unpack=True)
-        u = lda1[np.where(t_arr1>0)] * trans1
-        t_arr1 = t_arr1[np.where(t_arr1>0)]
-        v = lda2[np.where(t_arr2>0)] * trans2
-        t_arr2 = t_arr2[np.where(t_arr2>0)]
+    @parameter: index, type = int
+    @parameter: vscale, type = float """
+
+    wtreffile = wtref_path + filename + '_wtref.txt'.format(filename.split('.')[0])
+    try:
+        all_wtrefs = np.genfromtxt(wtreffile,usecols=(3),skip_header=1)
+    except OSError:
+        print(' ATTENTION: wtref-file not found at ' + wtreffile + '!')
+
+    if np.size(all_wtrefs) == 1:
+        wtref = float(all_wtrefs) * vscale
     else:
-        t_arr, u, v = np.genfromtxt(path+filename,usecols=(1,3,4),
-                                    skip_header=6,unpack=True)
+        wtref = all_wtrefs[index] * vscale
+           
+    return wtref
+
+
+def get_wind_comps(path, filename):
+    """ Get wind components from filename.
+    @parameter: filename, type = str """
+    with open(path + filename) as file:
+        for i, line in enumerate(file):
+            if i == 5:
+                wind_comp1 = line.split()[-4][-1].lower()
+                wind_comp2 = line.split()[-2][-1].lower()
+                
+    return wind_comp1, wind_comp2
+
+
+def nondimensionalise(u,v,wtref=None):
+    """ Nondimensionalise the data. wtref is set to 1 if no wtref is 
+    specified.
+    @parameter: u, type = np.array
+    @parameter: v, type = np.array
+    @parameter: wtref, type = int or float"""
+    if wtref is None:
+        wtref = 1
+        raise Warning('No value for wtref found. Run get_wtref(). wtref\
+        set to 1')
+                    
+    u = u/wtref
+    v = v/wtref
     
-    u_size = np.size(u)
-    v_size = np.size(v)
-    
-    # To full scale
+    return u,v
+
+
+def adapt_scale(x,y,z,t_arr,scale):
+    """ Convert timeseries from model scale to full scale. 
+    @parameter: x, type = int or float
+    @parameter: y, type = int or float
+    @parameter: z, type = int or float
+    @parameter: t_arr, type = np.array
+    @parameter: scale, type = float """
+    scale = scale
     x = x * scale/1000           #[m]
     y = y * scale/1000           #[m]
     z = z * scale/1000           #[m]
-    if _non_coi:
-        t_arr1 = t_arr1 * scale/1000   #[s]
-        t_arr2 = t_arr2 * scale/1000   #[s]
-    else:
-        t_arr = t_arr * scale/1000   #[s]
-        
-    # Make create equidistant time series
+    t_arr = t_arr * scale/1000   #[s]
+    
+    return x,y,z,t_arr
+
+
+def equidistant(u,v,t_arr):
+    """ Create equidistant time series.
+    @parameter: u, type = np.array
+    @parameter: v, type = np.array
+    @parameter: t_arr, type = np.array or list"""
     t_eq = np.linspace(t_arr[0],t_arr[-1],len(t_arr))
     u = wt.equ_dist_ts(t_arr,t_eq,u)
     v = wt.equ_dist_ts(t_arr,t_eq,v)
     
+    return u,v,t_eq
+    
+
+def mask_outliers(u,v,std_mask=5.):
+    """ Mask outliers and print number of outliers. std_mask specifies the
+    threshold for a value to be considered an outlier. 5 is the default 
+    value for std_mask.
+    @parameter: u, type = np.array
+    @parameter: v, type = np.array
+    @parameter: std_mask, type = float"""
+    u_size = np.size(u)
+    v_size = np.size(v)
+
     # Mask outliers
-    u_mask = u<(5*np.std(u)+np.mean(u))
-    v_mask = v<(5*np.std(v)+np.mean(v))
+    u_mask = u<(std_mask*np.std(u)+np.mean(u))
+    v_mask = v<(std_mask*np.std(v)+np.mean(v))
     mask = np.logical_and(u_mask, v_mask)
 
     u = u[mask]
     v = v[mask]
-    
-    print('FILENAME: '+filename)
-    print('Outliers component 1: ', u_size - np.size(u_mask))
-    print('Outliers component 2: ', v_size - np.size(v_mask))
 
-    if _non_coi: return (x,y,z,t_arr1,t_arr2,u,v)
-    
-    return (x,y,z,t_arr,u,v)
+    # Log outliers in console and to file
+    logger.info('Outliers component 1: {} or {:.4f}%'.format(
+        np.size(np.where(~u_mask)), 
+        np.size(np.where(~u_mask))/u_size*100
+    ))
+    logger.info('Outliers component 2: {} or {:.4f}%'.format(
+        np.size(np.where(~v_mask)), 
+        np.size(np.where(~v_mask))/v_size*100
+    ))
 
-
-def read_wtref(path,filename,vscale=1.):
-    """Reads wtref-file selected by the time series name 'filename' and scales
-    wtref with vscale. vscale is set to 1 as standard.
-    @parameter: path, type = string
-    @parameter: filename, type = string
-    @parameter: vscale, type = float """
-    
-    wtreffile = path + filename + '_wtref.txt'.format(filename.split('.')[0])
-    try:
-        wtref = np.genfromtxt(wtreffile,usecols=(3),skip_header=1)
-    except OSError:
-        print(' ATTENTION: wtref-file not found at ' + wtreffile + '!')
-
-    wtref = wtref * vscale
-    
-    return wtref
-
+    return u,v
 
 def get_pdf_max(data):
     """Finds maximum of the probability distribution of data.
@@ -202,7 +232,8 @@ def get_pdf_max(data):
 def print_to_mill(indata,arg1='0'):
     """indata must be 2D matrix. Prepares a txt file that is readable by the 
     milling machine in the model workshop. arg1 specifies a reference in the
-    output filename.
+    output filename. This function should not be used in this version of the
+    windtunnel package, as the output is not yet machine readable.
     @parameter: indata, 2D np.array()
     @parameter: arg1, string"""
     
@@ -310,14 +341,3 @@ def get_reference_spectra(height):
     ref_specs = np.genfromtxt(ref_path + 'ref_spectra_S_ii_z_' +value+'m.txt')
 
     return ref_specs
-
-
-def get_wind_comps(path,name):
-    """ Gets wind components from original BSA file. """
-    with open(path + name) as file:
-        for i, line in enumerate(file):
-             if i == 5:
-                 wind_comp1 = line.split()[-4][-1].lower()
-                 wind_comp2 = line.split()[-2][-1].lower()
-                
-    return wind_comp1, wind_comp2

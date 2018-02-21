@@ -192,7 +192,7 @@ def plotpdfs(sets,lablist,ax=None, **kwargs):
         heights = heights/float(sum(heights))
         binMids=bins[:-1]+np.diff(bins)/2.
         l = ax.plot(binMids,heights,label=label, **kwargs)
-        ret.append(*l)
+        ret.append(l)
         
     ax.set_ylabel('Probability Density')
     ax.legend()
@@ -224,7 +224,7 @@ def plotpdfs_err(sets,lablist,error,ax=None, **kwargs):
                              edgecolor='lightsteelblue',
                              facecolor='lightsteelblue', label='Error',
                              **kwargs)
-        ret.append(*l)
+        ret.append(l)
         
     ax.set_ylabel('Probability Density')
     ax.legend()
@@ -246,7 +246,7 @@ def plotcdfs(sets, lablist, ax=None, **kwargs):
         # Cumulative distributions:
         l = ax.plot(np.sort(data), np.linspace(0, 1, data.size),
                     label=label, **kwargs)
-        ret.append(*l)
+        ret.append(l)
         
     ax.set_ylabel('Count')
     ax.grid('on')

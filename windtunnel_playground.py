@@ -6,8 +6,10 @@ import os
 import windtunnel as wt
 import matplotlib.pyplot as plt
 
+# Create logger
 logger = logging.getLogger()
 
+# Import style sheet
 plt.style.use('typhon.mplstyle')
 
 
@@ -56,7 +58,7 @@ def get_ratio_referencedata():
 
 # TODO: alpha/z0 ratio plot
 # TODO: errorbars
-# TODO: documentation and readme, docstrings and comments
+# TODO: documentation and readme
 
 
 #%%#
