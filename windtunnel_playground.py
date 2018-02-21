@@ -196,7 +196,7 @@ for name in namelist:
                                   time_series[name][file].z)
             plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
      
-    # Iniate lists for all quantitites
+    # Initiate lists for all quantitites
     x = []
     y = []
     heights = []
