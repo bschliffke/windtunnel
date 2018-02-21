@@ -101,7 +101,6 @@ def plot_turb_int(data, heights, component='I_u', ax=None, **kwargs):
     plt.grid()
     plt.legend(handles=[l,s,m,r,vr],bbox_to_anchor=(0.5, 1.04),loc=8,
                fontsize=14)
-    plt.xlim(0,0.3)
     plt.xlabel(r'turbulence intensity '+component)
     plt.ylabel('z full-scale [m]')
     if component is '':
@@ -167,7 +166,7 @@ def plot_fluxes_log(data, heights, component='v', ax=None, **kwargs):
     for flux, height in zip(data, heights):
         l, = ax.plot(flux,height,'o',color='dodgerblue',
                     label=r'wind tunnel flux', **kwargs)
-        #ret.append(*l)
+        ret.append(l)
         
     plt.yscale('log')
     ax.grid(True,'both','both')
@@ -339,19 +338,20 @@ def plot_Re_independence(data,wtref,ax=None,**kwargs):
     if ax is None:
         ax=plt.gca()
 
-    ###  Plot
+    # Sort wtref and data to correspond to increasing wtref values
+    data = [wtref for _,wtref in sorted(zip(wtref,data))]
+    wtref = sorted(wtref)
+    
+    # Plot
     ret = []
     for i,value in enumerate(data):
-        ax.plot(wtref[i],value,marker='o',markersize=3,ls='None',color='navy',
-                **kwargs)
-    ycen = np.mean(data)
-    yrange = 0.02*ycen
-    ret = ax.axhspan(ycen-yrange,ycen+yrange,edgecolor='none', alpha=0.2,
-                label='2% range of mean')
-    
+        l = ax.plot(wtref[i],value,marker='o',markersize=4,ls='None',color='navy',
+                    **kwargs)
+        ret.append(l)
+        
     ax.set_xlabel(r'$U_{0}$ $[ms^{-1}]$')
     ax.set_ylabel(r'$M\cdot U_{0}^{-1}$')
-    ax.legend(loc='lower right',fontsize=10)
+    ax.legend(loc='lower right',fontsize=14)
     ax.grid(True)
     
     return ret

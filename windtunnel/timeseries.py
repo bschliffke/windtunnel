@@ -63,15 +63,15 @@ class Timeseries():
         
         return cls(u,v,x,y,z,t_arr)    
     
-    def get_wtref(self,wtref_path,filename,vscale=1.,index=0):
+    def get_wtref(self,wtref_path,filename,index=0,vscale=1.):
         """Reads wtref-file selected by the time series name 'filename' and
         scales wtref with vscale. vscale is set to 1 as standard. index 
         accesses only the one wtref value that is associated to the current
         file.
         @parameter: path, type = string
         @parameter: filename, type = string
-        @parameter: vscale, type = float 
-        @parameter: index, type = int """
+        @parameter: index, type = int
+        @parameter: vscale, type = float """
     
         wtreffile = wtref_path + filename + '_wtref.txt'.format(filename.split('.')[0])
         try:
@@ -79,7 +79,10 @@ class Timeseries():
         except OSError:
             print(' ATTENTION: wtref-file not found at ' + wtreffile + '!')
 
-        self.wtref = all_wtrefs[index] * vscale
+        if np.size(all_wtrefs) == 1:
+            self.wtref = float(all_wtrefs) * vscale
+        else:
+            self.wtref = all_wtrefs[index] * vscale
            
     def get_wind_comps(self,filename):
         """ Get wind components from filename.
