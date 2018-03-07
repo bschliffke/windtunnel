@@ -336,7 +336,7 @@ def plot_winddata_log(mean_magnitude,u_mean,v_mean,heights,yerr=0,ax=None,
                         color='dodgerblue')
         ret.append(M + U + V)
         
-    labels = ['Magnitude','U-component',r'2^{nd}-component']
+    labels = ['Magnitude','U-component',r'$2^{nd}-component$']
     
     plt.yscale('log')
     ax.grid(True,'both','both')
