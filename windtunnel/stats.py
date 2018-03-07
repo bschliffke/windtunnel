@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+""" Statistical and calculation tools for boundary layer analysis.
+"""
+
 import numpy as np
 import scipy.stats as sc
 import math as m

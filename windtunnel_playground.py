@@ -18,10 +18,12 @@ plt.style.use('typhon.mplstyle')
         
 ####### USE FROM HERE ON DOWN ################
 
-def plot_alpha_z0(alpha,z0,ax=None,**kwargs):
+def plot_alpha_z0(alpha,z0,alpha_err,z0_err,ax=None,**kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
     @parameter: alpha, type = float or int
-    @parameter: z0: type = float or int 
+    @parameter: z0: type = float or int
+    @parameter: alpha_err, type = float or int
+    @parameter: z0_err, type = float or int
     @parameter ax: axis passed to function
     @parameter **kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
@@ -29,7 +31,8 @@ def plot_alpha_z0(alpha,z0,ax=None,**kwargs):
         
     Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = wt.get_lux_referencedata()
     ret = []
-    ratio, = ax.plot(alpha,z0,'o',color='navy',label='wind tunnel')
+    ratio, = ax.errorbar(alpha,z0,xerr=alpha_err,yerr=z0_err,fmt='o',
+                         color='navy',label='wind tunnel')
     ref1, = ax.plot(Lux_10[1,:],Lux_10[0,:],'k-',linewidth=1,
                    label=r'$z_0=10\ m$ (theory)')
     ref2, = ax.plot(Lux_1[1,:],Lux_1[0,:],'k--',linewidth=1,
@@ -57,9 +60,9 @@ def get_ratio_referencedata():
 
 
 # TODO: alpha/z0 ratio plot (optional)
-# TODO: errorbars (with user defined error margins)
-# TODO: documentation (sphinx) and readme (github)
-
+# TODO: test lateral profile
+# TODO: finish convergence test
+# TODO: documentation (sphinx) and readme (github -> installation)
 
 #%%#
 # Specify path to data, path to wtref, output paths for plots and txt file, 
@@ -69,13 +72,13 @@ wtref_path = '//ewtl2/projects/Hafencity/wtref/'
 plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
 txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
 file_type = 'pdf'
-namelist = ['HC_KM_010']#['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']
+namelist = ['HC_LAH_UV_015']#['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']['HC_KM_010']
 scale = 500
 #1 = horizontal profile
 #2 = lateral profile
 #3 = convergence test
 #4 = Reynolds Number Independence
-mode = 3 
+mode = 2 
 
 time_series = {}
 time_series.fromkeys(namelist)
@@ -151,7 +154,7 @@ for name in namelist:
                                                 (time_series[name][file].u*
                                                 time_series[name][file].wtref))
         
-        if mode < 3:
+        if mode == 1:
             
             # Plot scatter plot of raw data
             plt.figure(files.index(file)+100)
@@ -251,7 +254,7 @@ for name in namelist:
         break
     
     # Save quantities for vertical and lateral profiles    
-    np.savetxt(txt_path + file[:-4] + '_turb.txt',
+    np.savetxt(txt_path + name + '_turb.txt',
                np.vstack((x,y,heights,mean_mag,u_mean,v_mean,u_std,v_std,I_u,
                           I_v,lux,fluxes,wdir,wtref)).transpose(),
                fmt='%.8f',header="flow and turbulence parameters"+'\n'+\
@@ -300,25 +303,25 @@ for name in namelist:
         # Results of a lateral profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag,u_mean,v_mean,y)
+        wt.plots.plot_winddata(mean_mag,u_mean,v_mean,y,lat=True)
         plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
         
         # Turbulence intensity of the first component
         plt.figure(1)
-        wt.plots.plot_turb_int(I_u,y)
+        wt.plots.plot_turb_int(I_u,y,lat=True)
         plt.savefig(plot_path + 'I_u_' + name + '.' + file_type)
     
         # Turbulence intensity of the second component
         plt.figure(2)
-        wt.plots.plot_turb_int(I_v,y,component='I_w')
+        wt.plots.plot_turb_int(I_v,y,component='I_w',lat=True)
         plt.savefig(plot_path + 'I_w_' + name + '.' + file_type)
     
         # Profile of the fluxes
         plt.figure(3) 
-        wt.plots.plot_fluxes(fluxes,y,'w')
+        wt.plots.plot_fluxes(fluxes,y,component='w',lat=True)
         plt.savefig(plot_path + 'fluxes_' + name + '.' + file_type)
     
         # Lateral profile of Lux data
         plt.figure(4)
-        wt.plots.plot_lux(lux,y,component='w')
+        wt.plots.plot_lux(lux,y,component='w',lat=True)
         plt.savefig(plot_path + 'Lux_' + name + '.' + file_type)

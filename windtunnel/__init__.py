@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Windtunnnel stuff....
+"""Python package for use with BSA software output.
 """
 
 import logging

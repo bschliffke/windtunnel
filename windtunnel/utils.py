@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+""" Utilities for basic boundary layer analysis and time series manipulation.
+"""
 import numpy as np
 from scipy.spatial import KDTree as kdt
 from skimage.measure import label
