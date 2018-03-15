@@ -205,8 +205,11 @@ for name in namelist:
             #             color='navy')
             plt.figure(222)
             for interval in intervals:#[1:int(0.5*np.size(intervals))]:
-                plt.plot(interval,turb_conv[interval][0],marker='o',
-                         color='navy')
+                for i, data in zip(intervals,turb_conv[interval]):
+                    plt.scatter(i,data,marker='o',color='navy')
+                    plt.axhline(y=np.mean(data),color='r')
+                #plt.plot(interval,turb_conv[interval][0],marker='o',
+                #         color='navy')
                 # Plot results
                 #fig, ax = plt.subplots(3,3, figsize=figsize(12))
                 #ax = ax.reshape(-1) # damit man nicht ax[x,y] benutzen muss, sondern ax[x]
