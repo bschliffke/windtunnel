@@ -21,6 +21,7 @@ __all__ = [
     'calc_spectra',
     'calc_ref_spectra',
     'convergence_test',
+    'convergence_test_new',
     'power_law',
     'calc_alpha',
     'calc_z0',
@@ -42,7 +43,7 @@ def calc_intervalmean(indata,intervals,DD=False):
    
     for interval in intervals:
         avg_data = np.zeros(int(np.ceil(np.size(indata) / interval)))
-        for n, i in enumerate(range(0, np.size(indata), interval)):
+        for n, i in enumerate(range(0, int(0.5*np.size(indata)), interval)):
             if DD:
                 u_east = np.nanmean(np.sin(indata[i:i+interval] * np.pi/180))
                 u_north = np.nanmean(np.cos(indata[i:i+interval] * np.pi/180))
@@ -119,9 +120,9 @@ def calc_wind_stats(u_comp,v_comp,wdir=0.):
     v_dev = np.mean(v-v_mean)
     u_std = np.std(u)
     v_std = np.std(v)
-    
+
     data = np.array([Magnitude,u_mean,v_mean,Direction,
-                     u_dev,v_dev,u_std,v_std])
+                    u_dev,v_dev,u_std,v_std])
 
     return data
    
@@ -349,9 +350,10 @@ def calc_ref_spectra(reduced_freq,a,b,c,d,e):
 
 
 def convergence_test(data,blocksize=100):
-    """ Conducts a block-wise convergence test on data using blocksize for the 
-    size of each increment. Returns a dictionary block_data. Each entry is 
-    named after its respective interval. blocksize's default value is 100.
+    """ Conducts a block-wise convergence test on non circular data using 
+    blocksize for the size of each increment. Returns a dictionary block_data.
+    Each entry is named after its respective interval. blocksize's default 
+    value is 100.
     @parameter: data, type = np.array or list
     @parameter: blocksize, type = int or float"""
     
@@ -361,6 +363,34 @@ def convergence_test(data,blocksize=100):
         
     intervals = list(np.arange(1,int(0.5*np.size(data))-1,blocksize))
     block_data = wt.calc_intervalmean(data,intervals)
+    
+    return intervals, block_data
+
+
+def convergence_test_new(data,interval=100,blocksize=100):
+    """ Conducts a block-wise convergence test on non circular data using 
+    blocksize for the size of each increment between intervals. Returns a 
+    dictionary block_data. Each entry is named after its respective interval.
+    blocksize's and interval's default values are 100.
+    @parameter: data, type = np.array or list
+    @parameter: interval, type = int
+    @parameter: blocksize, type = int"""
+    
+    if blocksize > 0.5*np.size(data):
+        raise Exception('blocksize must be smaller than half of the length\
+        of data in order to maintain independent values.')
+    
+    max_interval = 0.5*np.size(data)
+
+    intervals = np.arange(interval,int(0.5*max_interval),blocksize)
+    block_data = {}
+    block_data.fromkeys(intervals)
+    
+    while interval < max_interval:
+        for i in range(0,max_interval-interval,interval):
+            block_data[interval] = np.mean(data[i:i+interval])
+
+        interval = interval + blocksize
     
     return intervals, block_data
 

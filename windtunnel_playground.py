@@ -18,6 +18,35 @@ plt.style.use('typhon.mplstyle')
         
 ####### USE FROM HERE ON DOWN ################
 
+def convergence_test_new(data,interval=100,blocksize=100):
+    """ Conducts a block-wise convergence test on non circular data using 
+    blocksize for the size of each increment between intervals. Returns a 
+    dictionary block_data. Each entry is named after its respective interval.
+    blocksize's and interval's default values are 100.
+    @parameter: data, type = np.array or list
+    @parameter: interval, type = int
+    @parameter: blocksize, type = int"""
+    
+    if blocksize > 0.5*np.size(data):
+        raise Exception('blocksize must be smaller than half of the length\
+        of data in order to maintain independent values.')
+    
+    max_interval = int(0.5*np.size(data))
+
+    intervals = np.arange(interval,max_interval,blocksize)
+    block_data = {}
+    block_data.fromkeys(intervals)
+    
+    while interval < max_interval:
+        tmp = []
+        for i in range(0,max_interval-interval,interval):
+            tmp.append(np.mean(data[i:i+interval]))
+            block_data[interval] = np.asarray(tmp)
+
+        interval = interval + blocksize
+    
+    return intervals, block_data
+
 def plot_alpha_z0(alpha,z0,alpha_err,z0_err,ax=None,**kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
     @parameter: alpha, type = float or int
@@ -65,6 +94,7 @@ def get_ratio_referencedata():
 # TODO: documentation (sphinx) and readme (github -> installation)
 
 #%%#
+# This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
 path = '//ewtl2/projects/Hafencity/coincidence/time series/'
@@ -72,13 +102,13 @@ wtref_path = '//ewtl2/projects/Hafencity/wtref/'
 plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
 txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
 file_type = 'pdf'
-namelist = ['HC_LAH_UV_015']#['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']['HC_KM_010']
+namelist = ['HC_KM_010']#['HC_LAH_UV_015']['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']
 scale = 500
 #1 = horizontal profile
 #2 = lateral profile
 #3 = convergence test
 #4 = Reynolds Number Independence
-mode = 2 
+mode = 3 
 
 time_series = {}
 time_series.fromkeys(namelist)
@@ -145,6 +175,46 @@ for name in namelist:
         wind_comps[name][file] = time_series[name][file].wind_comp1,\
                                  time_series[name][file].wind_comp2
        
+        if mode == 3:
+        # Perform convergence test and plot results, no
+        # output saved as txt, as programme ends at "break"
+            # Average u and v component for different (default) intervals
+            intervals, u_data = convergence_test_new(time_series[name][file].u)
+            intervals, v_data = convergence_test_new(time_series[name][file].v)
+            
+            # Initialise dictionaries for convergence tests
+            wind_stats_conv = {}
+            wind_stats_conv.fromkeys(intervals)
+            turb_conv = {}
+            turb_conv.fromkeys(intervals)
+            #lux_conv = {}
+            #lux_conv.fromkeys(intervals)
+            
+            # Calculate quantities for each averaging interval
+            for interval in intervals:
+                wind_stats_conv[interval] = wt.calc_wind_stats(u_data[interval],
+                                                              v_data[interval])
+                turb_conv[interval] = wt.calc_turb_data(u_data[interval],
+                                                        v_data[interval])
+                #lux_conv[interval] = wt.calc_lux_data(u_data[interval],
+                #                                      v_data[interval]*
+                #                                      time_series[name][file].wtref)
+            #plt.figure(111)
+            #for interval in intervals[1:int(0.5*np.size(intervals))]:
+            #    plt.plot(interval,wind_stats_conv[interval][0],marker='o',
+            #             color='navy')
+            plt.figure(222)
+            for interval in intervals:#[1:int(0.5*np.size(intervals))]:
+                plt.plot(interval,turb_conv[interval][0],marker='o',
+                         color='navy')
+                # Plot results
+                #fig, ax = plt.subplots(3,3, figsize=figsize(12))
+                #ax = ax.reshape(-1) # damit man nicht ax[x,y] benutzen muss, sondern ax[x]
+                #for i in range(ax.size):
+                #    ax[i].plot(data[i])
+                
+            break
+    
         # Calculate mean wind quantities
         wind_stats[name][file] = wt.calc_wind_stats(time_series[name][file].u,
                                                     time_series[name][file].v)
@@ -198,6 +268,9 @@ for name in namelist:
                                   wind_comps[name][file],
                                   time_series[name][file].z)
             plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
+        
+    break
+   
      
     # Initiate lists for all quantitites
     x = []
@@ -234,19 +307,6 @@ for name in namelist:
         fluxes.append(turb_data[name][file][2])
         lux.append(lux_data[name][file])
         
-    if mode == 3:
-        # Perform convergence test and plot results, no
-        # output saved as txt, as programme ends at "break"
-        quantities = ['mean_mag','u_mean','u_std','v_mean','v_std','I_u','I_v',
-                      'fluxes','lux']
-        conv_test = {}
-        conv_test.fromkeys(quantities)
-        for quantity in quantities:
-            pass 
-            # conv_test[quantity] = wt.convergence_test(quantity)
-            # TODO: finish
-        break
-
     if mode == 4:
         # Perform and plots results of Reynolds Number Independence test, no
         # output saved as txt, as programme ends at "break"
