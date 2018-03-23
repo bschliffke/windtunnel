@@ -200,12 +200,12 @@ def plot_fluxes(data, heights, yerr=0, component='v', lat=False, ax=None,
                    edgecolor='none', alpha=0.2,
                    label='10% range of low point mean')
         ax.legend([l],labels,loc='best',fontsize=16)
-        ax.set_xlabel(r'u'+component+'$\cdot U_{0}^{-2}\ [-]$')
+        ax.set_xlabel(r'u'' '+component+'\'$\cdot U_{0}^{-2}\ [-]$')
         ax.set_ylabel('z full-scale [m]')
     else:
         ax.legend([l],labels,loc='best',fontsize=16)
         ax.set_xlabel('y full-scale [m]')
-        ax.set_ylabel(r'u'+component+'$\cdot U_{0}^{-2}\ [-]$')
+        ax.set_ylabel(r'u'' '+component+'\'$\cdot U_{0}^{-2}\ [-]$')
         
     return ret
 
@@ -245,7 +245,7 @@ def plot_fluxes_log(data, heights, yerr=0, component='v', ax=None, **kwargs):
                 edgecolor='none', alpha=0.2,
                 label='10% range of low point mean')
     ax.legend([l],labels,loc='best',fontsize=16)
-    ax.set_xlabel(r'u'+component+'$\cdot U_{0}^{-2}\ [-]$')
+    ax.set_xlabel(r'u'' '+component+'\'$\cdot U_{0}^{-2}\ [-]$')
     ax.set_ylabel('z full-scale [m]')
     
     return ret
@@ -348,13 +348,13 @@ def plot_winddata_log(mean_magnitude,u_mean,v_mean,heights,yerr=0,ax=None,
     return ret
 
 
-def plot_lux(Lux, heights, yerr=0, lat=False, ax=None, **kwargs):
+def plot_lux(Lux, heights, err=0, lat=False, ax=None, **kwargs):
     """Plots Lux data on a double logarithmic scale with reference data. yerr
     specifies the uncertainty. Its default value is 0. If lat
     is True then a lateral profile, without a loglog scale, is created.
     @parameter: Lux, type = list or np.array
     @parameter: heights, type = list or np.array
-    @parameter: yerr, type = int or float
+    @parameter: err, type = int or float
     @parameter: lat, type = boolean
     @parameter ax: axis passed to function
     @parameter **kwargs : additional keyword arguments passed to plt.plot() """
@@ -364,7 +364,7 @@ def plot_lux(Lux, heights, yerr=0, lat=False, ax=None, **kwargs):
     Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = wt.get_lux_referencedata()
     ret = []
     if lat == False:
-        Lux = ax.errorbar(Lux,heights,yerr=yerr,fmt='o',color='navy',)
+        Lux = ax.errorbar(Lux,heights,xerr=err,fmt='o',color='navy',)
         ref1 = ax.plot(Lux_10[1,:],Lux_10[0,:],'k-',linewidth=1)
         ref2 = ax.plot(Lux_1[1,:],Lux_1[0,:],'k--',linewidth=1)
         ref3 = ax.plot(Lux_01[1,:],Lux_01[0,:],'k-.',linewidth=1)
@@ -391,7 +391,7 @@ def plot_lux(Lux, heights, yerr=0, lat=False, ax=None, **kwargs):
         ax.set_ylabel(r'$z$ full-scale [m]')    
         
     else:
-        Lux = ax.errorbar(heights,Lux,yerr=yerr,fmt='o',color='navy')
+        Lux = ax.errorbar(heights,Lux,yerr=err,fmt='o',color='navy')
         labels = ['wind tunnel']
         ax.grid(True)
         ax.legend([Lux],labels,bbox_to_anchor=(0.5,1.05),loc='lower center',

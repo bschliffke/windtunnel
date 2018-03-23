@@ -18,7 +18,7 @@ plt.style.use('typhon.mplstyle')
         
 ####### USE FROM HERE ON DOWN ################
 
-def convergence_test_new(data,interval=100,blocksize=100):
+def convergence_test(data,interval=100,blocksize=100):
     """ Conducts a block-wise convergence test on non circular data using 
     blocksize for the size of each increment between intervals. Returns a 
     dictionary block_data. Each entry is named after its respective interval.
@@ -30,14 +30,14 @@ def convergence_test_new(data,interval=100,blocksize=100):
     if blocksize > 0.5*np.size(data):
         raise Exception('blocksize must be smaller than half of the length\
         of data in order to maintain independent values.')
-    
-    max_interval = int(0.5*np.size(data))
 
-    intervals = np.arange(interval,max_interval,blocksize)
+    max_interval = int(np.size(data))
+    
+    intervals = np.arange(interval,int(0.5*max_interval),blocksize)
     block_data = {}
     block_data.fromkeys(intervals)
     
-    while interval < max_interval:
+    while interval < max_interval/2:
         tmp = []
         for i in range(0,max_interval-interval,interval):
             tmp.append(np.mean(data[i:i+interval]))
@@ -46,6 +46,92 @@ def convergence_test_new(data,interval=100,blocksize=100):
         interval = interval + blocksize
     
     return intervals, block_data
+
+
+def plot_convergence_test(data1,data2,data3,data4,data5,data6,data7,data8,data9):
+    """ Plots results of convergence tests performed on each quantity
+    into one 3x3 plot. This is a very limited function and is only intended to
+    give a brief overview of the convergence test results using dictionaries as
+    input objects.
+    @parameter: data[0,...,9], type = dictionary"""
+    
+    fig, ax = plt.subplots(3,3, figsize=(12,7))
+    for i, key in enumerate([key for key in data1.keys()]):
+        ax[0,0].plot([i] * len(data1[key]), data1[key], color='navy',
+                      linestyle='None',marker='o', markersize=15)                  
+    del i, key
+    for i, key in enumerate([key for key in data2.keys()]):
+        ax[0,1].plot([i] * len(data2[key]), data2[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data3.keys()]):
+        ax[0,2].plot([i] * len(data3[key]), data3[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data4.keys()]):
+        ax[1,0].plot([i] * len(data4[key]), data4[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data5.keys()]):
+        ax[1,1].plot([i] * len(data5[key]), data5[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data6.keys()]):
+        ax[1,2].plot([i] * len(data6[key]), data6[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data7.keys()]):
+        ax[2,0].plot([i] * len(data7[key]), data7[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data8.keys()]):
+        ax[2,1].plot([i] * len(data8[key]), data8[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    for i, key in enumerate([key for key in data9.keys()]):
+        ax[2,2].plot([i] * len(data9[key]), data9[key],  color='navy',
+                      linestyle='None',marker='o', markersize=15)
+    del i, key
+    
+    for i in range(ax.shape[0]):
+        for k in range(ax.shape[1]):
+            ax[i][k].tick_params(labelsize=14)
+        #    ax[k].spines['left'].set_position('zero')
+            ax[i][k].spines['right'].set_color('none') # .set_visible(False)
+        #    ax[k].spines['bottom'].set_position('zero')
+            ax[i][k].spines['top'].set_color('none') # .set_visible(False)
+            ax[i][k].xaxis.set_ticks_position('bottom')  
+            ax[i][k].yaxis.set_ticks_position('left')
+    del i,k 
+    
+    ax[0,0].set(xticks=np.arange(len(data1.keys())+1),
+              xticklabels=[key for key in data1.keys()],
+              xlim=(-0.5, len(data1.keys())-0.5))
+    ax[0,1].set(xticks=np.arange(len(data2.keys())+1),
+              xticklabels=[key for key in data2.keys()],
+              xlim=(-0.5, len(data2.keys())-0.5))
+    ax[0,2].set(xticks=np.arange(len(data3.keys())+1),
+              xticklabels=[key for key in data3.keys()],
+              xlim=(-0.5, len(data3.keys())-0.5))
+    ax[1,0].set(xticks=np.arange(len(data4.keys())+1),
+              xticklabels=[key for key in data4.keys()],
+              xlim=(-0.5, len(data4.keys())-0.5))
+    ax[1,1].set(xticks=np.arange(len(data5.keys())+1),
+              xticklabels=[key for key in data5.keys()],
+              xlim=(-0.5, len(data5.keys())-0.5))
+    ax[1,2].set(xticks=np.arange(len(data6.keys())+1),
+              xticklabels=[key for key in data6.keys()],
+              xlim=(-0.5, len(data6.keys())-0.5))
+    ax[2,0].set(xticks=np.arange(len(data7.keys())+1),
+              xticklabels=[key for key in data7.keys()],
+              xlim=(-0.5, len(data7.keys())-0.5))
+    ax[2,1].set(xticks=np.arange(len(data8.keys())+1),
+              xticklabels=[key for key in data8.keys()],
+              xlim=(-0.5, len(data8.keys())-0.5))
+    ax[2,2].set(xticks=np.arange(len(data9.keys())+1),
+              xticklabels=[key for key in data9.keys()],
+              xlim=(-0.5, len(data9.keys())-0.5))
+
 
 def plot_alpha_z0(alpha,z0,alpha_err,z0_err,ax=None,**kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
@@ -102,9 +188,9 @@ wtref_path = '//ewtl2/projects/Hafencity/wtref/'
 plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
 txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
 file_type = 'pdf'
-namelist = ['HC_KM_010']#['HC_LAH_UV_015']['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']
+namelist =  ['HC_KM_010']#['HC_LAH_UV_015']['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']
 scale = 500
-#1 = horizontal profile
+#1 = vertical profile
 #2 = lateral profile
 #3 = convergence test
 #4 = Reynolds Number Independence
@@ -163,14 +249,15 @@ for name in namelist:
     # Iniate second layer of dictionaries for results 
     wind_comps[name] = {}
     wind_comps[name].fromkeys(files)
-    wind_stats[name] = {}
-    wind_stats[name].fromkeys(files)
-    turb_data[name] = {}
-    turb_data[name].fromkeys(files)
-    lux_data[name] = {}
-    lux_data[name].fromkeys(files)
-    spectra_data[name] = {}
-    spectra_data[name].fromkeys(files)
+    if mode != 3:
+        wind_stats[name] = {}
+        wind_stats[name].fromkeys(files)
+        turb_data[name] = {}
+        turb_data[name].fromkeys(files)
+        lux_data[name] = {}
+        lux_data[name].fromkeys(files)
+        spectra_data[name] = {}
+        spectra_data[name].fromkeys(files)
     for file in files:
         wind_comps[name][file] = time_series[name][file].wind_comp1,\
                                  time_series[name][file].wind_comp2
@@ -179,48 +266,86 @@ for name in namelist:
         # Perform convergence test and plot results, no
         # output saved as txt, as programme ends at "break"
             # Average u and v component for different (default) intervals
-            intervals, u_data = convergence_test_new(time_series[name][file].u)
-            intervals, v_data = convergence_test_new(time_series[name][file].v)
-            
-            # Initialise dictionaries for convergence tests
-            wind_stats_conv = {}
-            wind_stats_conv.fromkeys(intervals)
-            turb_conv = {}
-            turb_conv.fromkeys(intervals)
-            #lux_conv = {}
-            #lux_conv.fromkeys(intervals)
-            
-            # Calculate quantities for each averaging interval
-            for interval in intervals:
-                wind_stats_conv[interval] = wt.calc_wind_stats(u_data[interval],
-                                                              v_data[interval])
-                turb_conv[interval] = wt.calc_turb_data(u_data[interval],
-                                                        v_data[interval])
-                #lux_conv[interval] = wt.calc_lux_data(u_data[interval],
-                #                                      v_data[interval]*
-                #                                      time_series[name][file].wtref)
-            #plt.figure(111)
-            #for interval in intervals[1:int(0.5*np.size(intervals))]:
-            #    plt.plot(interval,wind_stats_conv[interval][0],marker='o',
-            #             color='navy')
-            plt.figure(222)
-            for interval in intervals:#[1:int(0.5*np.size(intervals))]:
-                plt.plot(interval,turb_conv[interval][0],marker='o',
-                         color='navy')
-                # Plot results
-                #fig, ax = plt.subplots(3,3, figsize=figsize(12))
-                #ax = ax.reshape(-1) # damit man nicht ax[x,y] benutzen muss, sondern ax[x]
-                #for i in range(ax.size):
-                #    ax[i].plot(data[i])
+            max_interval = int(np.size(time_series[name][file].u))
+            interval = 1000
+            blocksize = 1000
+            intervals = np.arange(interval,int(0.5*max_interval),blocksize)
+            quantities = ['Magnitude','u_mean',
+                          wind_comps[name][file][1] + '_mean','u_std',
+                          wind_comps[name][file][1] + '_std','I_u',
+                          'I_' + wind_comps[name][file][1],'flux','Lux']
+
+            conv_data = {}
+            conv_data.fromkeys(quantities)
+            for quantity in quantities:
+                conv_data[quantity] = {}
+                conv_data[quantity].fromkeys(intervals)
+
+            while interval < max_interval/2:
+                M_list = []
+                u_mean_list = []
+                v_mean_list = []
+                u_std_list = []
+                v_std_list = []
+                I_u_list = []
+                I_v_list = []
+                flux_list = []
+                Lux_list = []
+                for i in range(0,max_interval-interval,interval):
+                    dt = time_series[name][file].t_arr[i+interval] -\
+                         time_series[name][file].t_arr[i]
+                    M,u_mean,v_mean,u_std,v_std,dd = wt.calc_wind_stats(
+                                   time_series[name][file].u[i:i+interval],
+                                   time_series[name][file].v[i:i+interval])
+                    M_list.append(M)
+                    u_mean_list.append(u_mean)
+                    v_mean_list.append(v_mean)
+                    u_std_list.append(u_std)
+                    v_std_list.append(v_std)
+                    
+                    I_u,I_v,flux = wt.calc_turb_data(
+                                   time_series[name][file].u[i:i+interval],
+                                   time_series[name][file].v[i:i+interval])
+                    I_u_list.append(I_u)
+                    I_v_list.append(I_v)
+                    flux_list.append(flux)
+                    
+                    Lux = wt.calc_lux_data(dt,
+                                   time_series[name][file].u[i:i+interval])
+                    Lux_list.append(Lux)
+                    
+                conv_data['Magnitude'][interval]  = np.asarray(M_list)
+                conv_data['u_mean'][interval]     = np.asarray(u_mean_list)
+                conv_data[wind_comps[name][file][1] +'_mean'][interval] = np.asarray(v_mean_list)
+                conv_data['u_std'][interval]      = np.asarray(u_std_list)
+                conv_data[wind_comps[name][file][1] + '_std'][interval] = np.asarray(v_std_list)
+                conv_data['I_u'][interval]        = np.asarray(I_u_list)
+                conv_data['I_' + wind_comps[name][file][1]][interval]   = np.asarray(I_v_list)
+                conv_data['flux'][interval]       = np.asarray(flux_list)
+                conv_data['Lux'][interval]        = np.asarray(Lux_list)
+                             
+                interval = interval + blocksize
                 
+            plt.figure(1001)
+            plot_convergence_test(conv_data['Magnitude'],conv_data['u_mean'],
+                                  conv_data[wind_comps[name][file][1]+'_mean'],
+                                  conv_data['u_std'],
+                                  conv_data[wind_comps[name][file][1] +'_std'],
+                                  conv_data['I_u'],
+                                  conv_data['I_' + wind_comps[name][file][1]],
+                                  conv_data['flux'],conv_data['Lux'])
+            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type)
             break
+        break
+    break
     
         # Calculate mean wind quantities
+        dt = time_series[name][file].t_eq[1] - time_series[name][file].t_eq[0]
         wind_stats[name][file] = wt.calc_wind_stats(time_series[name][file].u,
                                                     time_series[name][file].v)
         turb_data[name][file] = wt.calc_turb_data(time_series[name][file].u,
                                                   time_series[name][file].v)
-        lux_data[name][file] = wt.calc_lux_data(time_series[name][file].t_eq,
+        lux_data[name][file] = wt.calc_lux_data(dt,
                                                 (time_series[name][file].u*
                                                 time_series[name][file].wtref))
         
@@ -269,7 +394,7 @@ for name in namelist:
                                   time_series[name][file].z)
             plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
         
-    break
+    #break
    
      
     # Initiate lists for all quantitites
@@ -346,12 +471,12 @@ for name in namelist:
     
         # Profile of the fluxes
         plt.figure(4) 
-        wt.plots.plot_fluxes(fluxes,heights,'w')
+        wt.plots.plot_fluxes(fluxes,heights,component='w')
         plt.savefig(plot_path + 'fluxes_' + name + '.' + file_type)
     
         # Profiles of the fluxes, logarithmic y-axis
         plt.figure(5)
-        wt.plots.plot_fluxes_log(fluxes,heights,'w')
+        wt.plots.plot_fluxes_log(fluxes,heights,component='w')
         plt.savefig(plot_path + 'fluxes_log_' + name + '.' + file_type)
     
         # Double logarithmic profile of Lux data

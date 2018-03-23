@@ -20,8 +20,8 @@ __all__ = [
     'calc_autocorr',
     'calc_spectra',
     'calc_ref_spectra',
-    'convergence_test',
-    'convergence_test_new',
+    'convergence_test_1',
+    'convergence_test_2',
     'power_law',
     'calc_alpha',
     'calc_z0',
@@ -116,13 +116,10 @@ def calc_wind_stats(u_comp,v_comp,wdir=0.):
     Direction = wdir-np.arctan2(v_mean,u_mean)*180/np.pi
     if Direction>360: Direction-=360
     if Direction<0: Direction+=360    
-    u_dev = np.mean(u-u_mean)
-    v_dev = np.mean(v-v_mean)
     u_std = np.std(u)
     v_std = np.std(v)
 
-    data = np.array([Magnitude,u_mean,v_mean,Direction,
-                    u_dev,v_dev,u_std,v_std])
+    data = np.array([Magnitude,u_mean,v_mean,u_std,v_std,Direction])
 
     return data
    
@@ -155,29 +152,26 @@ def calc_turb_data(u_comp,v_comp):
     
     return data
 
-def calc_lux_data(t_eq,u_comp):
+def calc_lux_data(dt,u_comp):
     """ Calculates the integral length scale according to R. Fischer (2011) 
-    from an equidistant time series of the u component.
-    @parameter: t_eq, type = np.array or list
+    from an equidistant time series of the u component using time step dt.
+    @parameter: t_eq, type = int or float
     @parameter: u_comp, type = np.array or list """
+    
+    if np.size(u_comp) < 5:
+        raise Exception('Too few value to estimate Lux!')
 
     mask = np.where(~np.isnan(u_comp))
     
     u = u_comp[mask]
-    
-    dt = t_eq[1]-t_eq[0]# time step
-    lag_eq = np.arange(1000) * dt# array of time lags
-    u_eq_acorr = calc_acorr(u,1000)# autocorrelation (one sided) of time series u_eq
+
+    lag_eq = np.arange(1,np.size(u)+1) * dt# array of time lags
+    u_eq_acorr = calc_acorr(u,np.size(u))# autocorrelation (one sided) of time 
+                                         # series u_eq
        
     Lux = 0.
     # see dissertation R.Fischer (2011) for calculation method
     for i in range(np.size(u)-2):
-        if i == 999:
-            u_eq_acorr = calc_acorr(u,4000)
-            lag_eq = np.arange(4000)*dt
-        if i == 3999:
-            u_eq_acorr = calc_acorr(u,np.size(u))
-            lag_eq = np.arange(u_eq_acorr.size)*dt
 
         autc1 = u_eq_acorr[i]
     
@@ -186,7 +180,7 @@ def calc_lux_data(t_eq,u_comp):
         Lux = Lux + (autc1 + autc2)*0.5
 
         if autc2>autc1:
-            acorr_fit = np.polyfit(lag_eq[:i],np.log(u_eq_acorr[:i]),deg=1)
+            acorr_fit = np.polyfit(lag_eq[:i],np.log(abs(u_eq_acorr[:i])),deg=1)
             acorr_fit = np.exp(acorr_fit[0]*lag_eq+acorr_fit[1])
         
             if np.min(acorr_fit)<0.001:
@@ -349,7 +343,7 @@ def calc_ref_spectra(reduced_freq,a,b,c,d,e):
    return a*reduced_freq/np.abs(e+b*reduced_freq**c)**d
 
 
-def convergence_test(data,blocksize=100):
+def convergence_test_1(data,blocksize=100):
     """ Conducts a block-wise convergence test on non circular data using 
     blocksize for the size of each increment. Returns a dictionary block_data.
     Each entry is named after its respective interval. blocksize's default 
@@ -367,7 +361,7 @@ def convergence_test(data,blocksize=100):
     return intervals, block_data
 
 
-def convergence_test_new(data,interval=100,blocksize=100):
+def convergence_test_2(data,interval=100,blocksize=100):
     """ Conducts a block-wise convergence test on non circular data using 
     blocksize for the size of each increment between intervals. Returns a 
     dictionary block_data. Each entry is named after its respective interval.
@@ -379,16 +373,18 @@ def convergence_test_new(data,interval=100,blocksize=100):
     if blocksize > 0.5*np.size(data):
         raise Exception('blocksize must be smaller than half of the length\
         of data in order to maintain independent values.')
-    
-    max_interval = 0.5*np.size(data)
 
+    max_interval = int(np.size(data))
+    
     intervals = np.arange(interval,int(0.5*max_interval),blocksize)
     block_data = {}
     block_data.fromkeys(intervals)
     
-    while interval < max_interval:
+    while interval < max_interval/2:
+        tmp = []
         for i in range(0,max_interval-interval,interval):
-            block_data[interval] = np.mean(data[i:i+interval])
+            tmp.append(np.mean(data[i:i+interval]))
+            block_data[interval] = np.asarray(tmp)
 
         interval = interval + blocksize
     
