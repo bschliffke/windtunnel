@@ -2,17 +2,18 @@ Reference
 =========
 
 windtunnel
-----
+----------
 
 plots
-```````````````````````
+-----
+
 .. toctree::
    :maxdepth: 3
 
    windtunnel.plots
 
 utils
-``````````````
+-----
 
 .. toctree::
    :maxdepth: 2
@@ -20,7 +21,7 @@ utils
    windtunnel.utils
 
 stats
-----------
+-----
 
 .. toctree::
    :maxdepth: 2
@@ -28,7 +29,7 @@ stats
    windtunnel.stats
 
 timeseries
------------------------------
+----------
 
 .. toctree::
    :maxdepth: 2
