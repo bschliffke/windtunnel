@@ -266,6 +266,7 @@ for name in namelist:
         # Perform convergence test and plot results, no
         # output saved as txt, as programme ends at "break"
             # Average u and v component for different (default) intervals
+
             max_interval = int(np.size(time_series[name][file].u))
             interval = 1000
             blocksize = 1000
@@ -325,7 +326,7 @@ for name in namelist:
                 conv_data['Lux'][interval]        = np.asarray(Lux_list)
                              
                 interval = interval + blocksize
-                
+
             plt.figure(1001)
             plot_convergence_test(conv_data['Magnitude'],conv_data['u_mean'],
                                   conv_data[wind_comps[name][file][1]+'_mean'],
