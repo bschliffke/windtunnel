@@ -41,7 +41,7 @@ for name in namelist:
 # The script 'example_data_analysis.py'
 The script 'data_analysis.py' offers a basic boundary analysis based on functions from this package. It offers four different modes of analysis (1 = horizontal profile, 2 = lateral profile, 3 = convergence test, 4 = Reynolds Number Independence). The output type of the images can be specified to any type supported by python. It necessary to specify the paths to the data and wtref as well as the desired output paths for plots and txt files. A scale needs to be defined in order to transfer the results to full-scale coordinates.
 
-# Example of 'data_analysis.py' input
+# Example of 'example_data_analysis.py' input
 ```
 # Input paths for data and wtref with a list of names of the measurement files
 path = '/path/to/your/data/'
