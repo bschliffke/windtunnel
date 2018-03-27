@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import logging
@@ -12,56 +13,6 @@ logger = logging.getLogger()
 # Import style sheet
 plt.style.use('typhon.mplstyle')
 
-
-#%%#
-# TODO: class Timeseries_nc:
-        
-####### USE FROM HERE ON DOWN ################
-    
-def plot_alpha_z0(alpha,z0,alpha_err,z0_err,ax=None,**kwargs):
-    """ Calculates and plots the ratio of alpha to z0, with reference data.
-    @parameter: alpha, type = float or int
-    @parameter: z0: type = float or int
-    @parameter: alpha_err, type = float or int
-    @parameter: z0_err, type = float or int
-    @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
-    if ax is None:
-        ax = plt.gca()
-        
-    Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = wt.get_lux_referencedata()
-    ret = []
-    ratio, = ax.errorbar(alpha,z0,xerr=alpha_err,yerr=z0_err,fmt='o',
-                         color='navy',label='wind tunnel')
-    ref1, = ax.plot(Lux_10[1,:],Lux_10[0,:],'k-',linewidth=1,
-                   label=r'$z_0=10\ m$ (theory)')
-    ref2, = ax.plot(Lux_1[1,:],Lux_1[0,:],'k--',linewidth=1,
-                   label=r'$z_0=1\ m$ (theory)')
-    ref3, = ax.plot(Lux_01[1,:],Lux_01[0,:],'k-.',linewidth=1,
-                   label=r'$z_0=0.1\ m$ (theory)')
-    ref4, = ax.plot(Lux_001[1,:],Lux_001[0,:],'k:',linewidth=1,
-                   label=r'$z_0=0.01\ m$ (theory)')
-    ref5, = ax.plot(Lux_obs_smooth[1,:],Lux_obs_smooth[0,:],'k+',
-                   linewidth=1,label='observations smooth surface')
-    ref6, = ax.plot(Lux_obs_rough[1,:],Lux_obs_rough[0,:],'kx',
-                   linewidth=1,label='observations rough surface')
-
-    ax.set_xlabel(r'$\alpha [-]$')
-    ax.set_xlabel(r'$z_{0} [m]$')
-    
-    return ret
-
-
-def get_ratio_referencedata():
-    """Reads and returns reference data for the raio of alpha to z0.
-    This function takes no parameters. """
-    #ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
-    # TODO: finish this with new ref data
-
-
-# TODO: alpha/z0 ratio plot (optional)
-# TODO: documentation (sphinx) and readme (github -> installation)
-
 #%%#
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
@@ -71,13 +22,13 @@ wtref_path = '//ewtl2/projects/Hafencity/wtref/'
 plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
 txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
 file_type = 'pdf'
-namelist =  ['HC_KM_010']#['HC_LAH_UV_015']['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']
+namelist =  []
 scale = 500
 #1 = vertical profile
 #2 = lateral profile
 #3 = convergence test
 #4 = Reynolds Number Independence
-mode = 3 
+mode = 1
 
 time_series = {}
 time_series.fromkeys(namelist)
@@ -159,11 +110,8 @@ for name in namelist:
                  time_series[name][file].t_eq[0]
             # reference length for dimensionless time
             ref_length = 1
-            # nondimensionalise time step using wtref and ref_length
-            #dt = dt*time_series[name][file].wtref/ref_length
             # determine averaging intervals
             intervals = np.arange(interval,int(0.5*max_interval),blocksize)
-            #intervals = intervals*dt
             quantities = ['Magnitude','u_mean',
                           wind_comps[name][file][1] + '_mean','u_std',
                           wind_comps[name][file][1] + '_std','I_u',
@@ -193,8 +141,6 @@ for name in namelist:
                 flux_list = []
                 Lux_list = []
                 for i in range(0,max_interval-interval,interval):
-#                    dt = time_series[name][file].t_eq[i+interval] -\
-#                         time_series[name][file].t_eq[i]
                     M,u_mean,v_mean,u_std,v_std,dd = wt.calc_wind_stats(
                                    time_series[name][file].u[i:i+interval],
                                    time_series[name][file].v[i:i+interval])
@@ -234,7 +180,7 @@ for name in namelist:
             # investigated. The plot is saved in plot_path, specified at the
             # beginning of this example programme.
             plt.figure(1001)
-            wt.plots.plot_convergence_test(conv_data['Magnitude'],conv_data['u_mean'],
+            wt.plot_convergence_test(conv_data['Magnitude'],conv_data['u_mean'],
                                   conv_data[wind_comps[name][file][1]+'_mean'],
                                   conv_data['u_std'],
                                   conv_data[wind_comps[name][file][1] +'_std'],
