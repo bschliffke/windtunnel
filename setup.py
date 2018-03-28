@@ -8,16 +8,13 @@ from setuptools import find_packages
 if not sys.version_info >= (3, 5, 1):
     sys.exit('Only supports Python version >=3.5.1.\n'
              'Current version is {}'.format(sys.version))
-
-__version__ = open(join(dirname(__file__), 'windtunnel', 'VERSION')).read().strip()
-
+    
 setup(
     name='windtunnel',
     author='Benyamin Schliffke',
     author_email='benny.schliffke@gmail.com',
     url='https://github.com/bschliffke/windtunnel',
-    download_url='https://github.com/bschliffke/windtunnel/' + __version__,
-    version=__version__,
+    version=_'0.1',
     packages=find_packages(),
     license='MIT',
     description='Python package for use with BSA software output.',
