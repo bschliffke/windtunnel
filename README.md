@@ -38,10 +38,10 @@ for name in namelist:
         time_series[name][file] = ts
 ```
 
-# The script 'data_analysis.py' (available 03/18)
+# The script 'example_data_analysis.py'
 The script 'data_analysis.py' offers a basic boundary analysis based on functions from this package. It offers four different modes of analysis (1 = horizontal profile, 2 = lateral profile, 3 = convergence test, 4 = Reynolds Number Independence). The output type of the images can be specified to any type supported by python. It necessary to specify the paths to the data and wtref as well as the desired output paths for plots and txt files. A scale needs to be defined in order to transfer the results to full-scale coordinates.
 
-# Example of 'data_analysis.py' input
+# Example of 'example_data_analysis.py' input
 ```
 # Input paths for data and wtref with a list of names of the measurement files
 path = '/path/to/your/data/'
@@ -80,4 +80,4 @@ Type:      function
 ```
 
 # Future development
-Future development should include a parallel set of function for measurements done in non-coincedence mode. Also a new branch for a quick basic analysis of concentration measurements would be useful. Any functions developed by single users outside of this package, but are considered useful to the user base of the windtunnel package, may be added. At this point the python PEP 8 -- Style Guide for Python Code (https://www.python.org/dev/peps/pep-0008/#code-lay-out) has to be followed to maintain readability and consistency within the package's source code. All maintaince work has to be documented with reasons given for the work done.
+Future development should include a parallel set of function for measurements done in non-coincidence mode. Also a new branch for a quick basic analysis of concentration measurements would be useful. Any functions developed by single users outside of this package, but are considered useful to the user base of the windtunnel package, may be added. At this point the python PEP 8 -- Style Guide for Python Code (https://www.python.org/dev/peps/pep-0008/#code-lay-out) has to be followed to maintain readability and consistency within the package's source code. All maintenance work has to be documented with reasons given for the work done.
