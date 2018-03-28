@@ -3,8 +3,6 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-#import cartopy.crs as ccrs
-#from cartopy.io.img_tiles import OSM
 
 
 __all__ = [
@@ -15,7 +13,6 @@ __all__ = [
     'plotpdfs',
     'plotpdfs_err',
     'plotcdfs',
-#    'plotdata2OSM',
 ]
 
 class Windrose:
@@ -253,56 +250,3 @@ def plotcdfs(sets, lablist, ax=None, **kwargs):
     ax.legend()
     
     return ret
-
-
-#def plotdata2OSM(data, zoom, ax=None, **kwargs):
-#    """Plots data to OpenStreetMap (OSM) maps at a desired zoom.
-#    @parameter data: data array, must contain at least two columns
-#    @parameter zoom: quality of the map, dependent on figure size
-#    @parameter text: add data as text to points, boolean
-#    @parameter ax: axis passed to function
-#    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
-#    if np.size(data.shape)<2:
-#        raise Exception('Input data does not contain sufficient information.')
-#        
-#    lons = np.array([])
-#    lats = np.array([])
-#
-#    if ax is None:
-#       ax = plt.gca()
-#    
-#    # Get area coordinates and add margin
-#    lon_min = np.min(data[:,0])-0.1
-#    lon_max = np.max(data[:,0])+0.1
-#    lat_min = np.min(data[:,1])-0.1
-#    lat_max = np.max(data[:,1])+0.1
-#    
-#    # Collect all longitude and latitudes
-#    for i in range(0,data.shape[0]):
-#        lons = np.append(lons,data[i][0])
-#        lats = np.append(lats,data[i][1])
-#            
-#    osm_tiles = OSM()
-#          
-#    # Use the tile's projection for the underlying map.
-#    ax = plt.axes(projection=osm_tiles.crs)
-#    
-#    # Specify a region of interest
-#    ax.set_extent([lon_min, lon_max, lat_min, lat_max],
-#                  ccrs.PlateCarree())
-#    
-#    # Add the tiles at zoom level.
-#    ax.add_image(osm_tiles, zoom)
-#    
-#    # Plot points of interest
-#    plt.plot(lons, lats,
-#             color='orange', marker='o',markersize=10,ls='None',
-#             transform=ccrs.PlateCarree(), **kwargs)
-#    
-#    # Add data its specific point with a slight offset
-#    for i in range(0,data.shape[0]):
-#        plt.text(lons[i], lats[i]+0.005, str(data[i][2]),
-#                 fontsize=20,horizontalalignment='right',
-#                 transform=ccrs.Geodetic())
-#         
-#    plt.show()
