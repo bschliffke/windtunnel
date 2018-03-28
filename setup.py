@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
 from distutils.core import setup
-from os.path import dirname, join
 from setuptools import find_packages
 
 
