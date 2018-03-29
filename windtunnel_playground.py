@@ -124,13 +124,13 @@ wtref_path = '//ewtl2/projects/Hafencity/wtref/'
 plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
 txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
 file_type = 'pdf'
-namelist =  ['HC_KM_010']#['HC_LAH_UV_015']['HC_BL_UW_130']['HC_RZU_UV_011']['HC_BL_UW_139']
+namelist = ['HC_BL_UW_139']#['HC_BL_UW_130']['HC_KM_010']['HC_RZU_UV_011']['HC_LAH_UV_015']
 scale = 500
 #1 = vertical profile
 #2 = lateral profile
 #3 = convergence test
 #4 = Reynolds Number Independence
-mode = 3 
+mode = 1 
 
 time_series = {}
 time_series.fromkeys(namelist)

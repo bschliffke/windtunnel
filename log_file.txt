@@ -1,2 +1,12 @@
-03-29 13:32 root         INFO     Outliers component 1: 0 or 0.0000%
-03-29 13:32 root         INFO     Outliers component 2: 7 or 0.0079%
+03-29 14:39 root         INFO     Outliers component 1: 0 or 0.0000%
+03-29 14:39 root         INFO     Outliers component 2: 4 or 0.0244%
+03-29 14:39 root         INFO     Outliers component 1: 0 or 0.0000%
+03-29 14:39 root         INFO     Outliers component 2: 3 or 0.0106%
+03-29 14:39 root         INFO     Outliers component 1: 1 or 0.0031%
+03-29 14:39 root         INFO     Outliers component 2: 2 or 0.0062%
+03-29 14:39 root         INFO     Outliers component 1: 0 or 0.0000%
+03-29 14:39 root         INFO     Outliers component 2: 3 or 0.0093%
+03-29 14:39 root         INFO     Outliers component 1: 0 or 0.0000%
+03-29 14:39 root         INFO     Outliers component 2: 5 or 0.0169%
+03-29 14:40 root         INFO     Outliers component 1: 0 or 0.0000%
+03-29 14:40 root         INFO     Outliers component 2: 2 or 0.0085%

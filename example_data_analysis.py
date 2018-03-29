@@ -17,8 +17,8 @@ plt.style.use('typhon.mplstyle')
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
-path = '//ewtl2/projects/Hafencity/coincidence/time series/'
-wtref_path = '//ewtl2/projects/Hafencity/wtref/'
+path = 'path_to_your_timeseries'
+wtref_path = 'path_to_your_wtref'
 plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
 txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
 file_type = 'pdf'
