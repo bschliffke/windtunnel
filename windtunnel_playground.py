@@ -18,148 +18,58 @@ plt.style.use('typhon.mplstyle')
         
 ####### USE FROM HERE ON DOWN ################
 
-def plot_convergence_test(data1,data2,data3,data4,data5,data6,data7,data8,
-                          data9,wtref=1,ref_length=1,scale=1):
-    """ Plots results of convergence tests performed on each quantity
-    into one 3x3 plot. This is a very limited function and is only intended to
-    give a brief overview of the convergence test results using dictionaries as
-    input objects. wtref, ref_length and scale are used to determine a 
-    dimensionless time unit on the x-axis. Default values for each are 1.
-    @parameter: data[0,...,9], type = dictionary
+def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None):
+    """Plots results of convergence tests  from data. This is a very limited 
+    function and is only intended to give a brief overview of the convergence
+    rest results using dictionaries as input objects. wtref, ref_length and 
+    scale are used to determine a dimensionless time unit on the x-axis. 
+    Default values for each are 1.
+    @parameter: data_dict, type = dictionary
     @parameter: wtref, type = float or int
     @parameter: ref_length, type = float or int
-    @parameter: scale, type = float or int"""
+    @parameter: scale, type = float or int
+    @parameter: ylabel, type = string
+    @parameter: ax: axis passed to function"""
+
+    if ax is None:
+        ax = plt.gca()
     
-    fig, ax = plt.subplots(3,3, figsize=(24,14))
-    for i, key in enumerate([key for key in data1.keys()]):
-        ax[0,0].plot([i] * len(data1[key]), data1[key], color='navy',
+    handles = []   
+    
+    for i, key in enumerate([key for key in data.keys()]):
+        l, = ax.plot([i] * len(data[key]), data[key], color='navy',
                       linestyle='None',marker='o', markersize=15)                  
-        ax[0,0].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data2.keys()]):
-        ax[0,1].plot([i] * len(data2[key]), data2[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[0,1].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data3.keys()]):
-        ax[0,2].plot([i] * len(data3[key]), data3[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[0,2].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data4.keys()]):
-        ax[1,0].plot([i] * len(data4[key]), data4[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[1,0].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data5.keys()]):
-        ax[1,1].plot([i] * len(data5[key]), data5[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[1,1].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data6.keys()]):
-        ax[1,2].plot([i] * len(data6[key]), data6[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[1,2].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data7.keys()]):
-        ax[2,0].plot([i] * len(data7[key]), data7[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[2,0].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data8.keys()]):
-        ax[2,1].plot([i] * len(data8[key]), data8[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[2,1].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data9.keys()]):
-        ax[2,2].plot([i] * len(data9[key]), data9[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[2,2].grid(True)
-    del i, key
+        ax.grid(True)
+        handles.append(l)
     
-    for i in range(ax.shape[0]):
-        for k in range(ax.shape[1]):
-            ax[i][k].tick_params(labelsize=14)
-        #    ax[k].spines['left'].set_position('zero')
-            ax[i][k].spines['right'].set_color('none') # .set_visible(False)
-        #    ax[k].spines['bottom'].set_position('zero')
-            ax[i][k].spines['top'].set_color('none') # .set_visible(False)
-            ax[i][k].xaxis.set_ticks_position('bottom')  
-            ax[i][k].yaxis.set_ticks_position('left')
-    del i,k 
-    
-    xticklabels=[key for key in data1.keys()][0::10]
+    xticklabels=[key for key in data.keys()]
     xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[0,0].set(xticks=np.arange(0,len(data1.keys())+1,10),
+    ax.set(xticks=np.arange(0,len(data.keys())+1),
               xticklabels=xticklabels,
-              xlim=(-0.5, len(data1.keys())-0.5))
-    ax[0,0].set_ylabel('data1')
-    ax[0,0].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+              xlim=(-0.5, len(data.keys())-0.5))
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
     
-    xticklabels=[key for key in data2.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[0,1].set(xticks=np.arange(0,len(data2.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data2.keys())-0.5))
-    ax[0,1].set_ylabel('data2')
-    ax[0,1].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+    return handles
     
-    xticklabels=[key for key in data3.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[0,2].set(xticks=np.arange(0,len(data3.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data3.keys())-0.5))
-    ax[0,2].set_ylabel('data3')
-    ax[0,2].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+
+def plot_convergence(data_dict,ncols=3,**kwargs):
+    """ Plots results of convergence tests performed on any number of 
+    quantities in one plot. ncols specifies the number of columns desired in
+    the output plot. **kwargs contains any parameters to be passed to 
+    plot_convergence_test, such as wtref, ref_length and scale. See doc_string
+    of plot_convergence_test for more details.
+    @parameter: data_dict, type = dictionary
+    @parameter: ncols, type = int
+    @parameter: **kwargs keyword arguments passed to plot_convergence_test"""
     
-    xticklabels=[key for key in data4.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[1,0].set(xticks=np.arange(0,len(data4.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data4.keys())-0.5))
-    ax[1,0].set_ylabel('data4')
-    ax[1,0].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data5.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[1,1].set(xticks=np.arange(0,len(data5.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data5.keys())-0.5))
-    ax[1,1].set_ylabel('data5')
-    ax[1,1].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data6.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[1,2].set(xticks=np.arange(0,len(data6.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data6.keys())-0.5))
-    ax[1,2].set_ylabel('data6')
-    ax[1,2].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data7.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[2,0].set(xticks=np.arange(0,len(data7.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data7.keys())-0.5))
-    ax[2,0].set_ylabel('data7')
-    ax[2,0].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data8.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[2,1].set(xticks=np.arange(0,len(data8.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data8.keys())-0.5))
-    ax[2,1].set_ylabel('data8')
-    ax[2,1].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data9.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[2,2].set(xticks=np.arange(0,len(data9.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data9.keys())-0.5))
-    ax[2,2].set_ylabel('data9')
-    ax[2,2].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    plt.tight_layout()
+    fig, axes = plt.subplots(ncols,int(np.ceil(len(data_dict.keys())/ncols)),
+                             figsize=(24,14))
+    for (key,data), ax in zip(data_dict.items(), axes.flat):
+        plot_convergence_test(data,ylabel=key,ax=ax,**kwargs)        
+
+    return axes
+
 
 def plot_alpha_z0(alpha,z0,alpha_err,z0_err,ax=None,**kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
@@ -377,15 +287,9 @@ for name in namelist:
             # investigated. The plot is saved in plot_path, specified at the
             # beginning of this example programme.
             plt.figure(1001)
-            plot_convergence_test(conv_data['Magnitude'],conv_data['u_mean'],
-                                  conv_data[wind_comps[name][file][1]+'_mean'],
-                                  conv_data['u_std'],
-                                  conv_data[wind_comps[name][file][1] +'_std'],
-                                  conv_data['I_u'],
-                                  conv_data['I_' + wind_comps[name][file][1]],
-                                  conv_data['flux'],conv_data['Lux'],
-                                  time_series[name][file].wtref,ref_length,
-                                  scale)
+            plot_convergence(conv_data,wtref=time_series[name][file].wtref,
+                             ref_length=ref_length,scale=scale)
+            plt.tight_layout()
             plt.savefig(plot_path + 'convergence_' + name + '.' + file_type)
             quit()
     
@@ -426,10 +330,12 @@ for name in namelist:
                                   spectra_data[name][file][2],
                                   spectra_data[name][file][3])).transpose(),
                        fmt='%.8f',
-                       header="dimensionless spectra - smoothend according to reduced frequency bins"+'\n'+\
-                       "frequency=0 where no energy content"+'\n'+\
-                       "format: standard numpy.genfromtxt()"+'\n'+\
-                       "variables = \"f_sm\" \"S_uu_sm\" \"S_vv_sm\" \"S_uv_sm\" ")
+                       header=('dimensionless spectra - smoothend according to'
+                       'reduced frequency bins\n'
+                       'frequency=0 where no energy content\n'
+                       'format: standard numpy.genfromtxt()\n'
+                       'variables = \"f_sm\" \"S_uu_sm\" \"S_vv_sm\" '
+                       '\"S_uv_sm\" '))
             
             # Plot spectra
             plt.figure(files.index(file)+400)
@@ -489,10 +395,14 @@ for name in namelist:
     np.savetxt(txt_path + name + '_turb.txt',
                np.vstack((x,y,heights,mean_mag,u_mean,v_mean,u_std,v_std,I_u,
                           I_v,lux,fluxes,wdir,wtref)).transpose(),
-               fmt='%.8f',header="flow and turbulence parameters"+'\n'+\
-               "units: dimensionless!"+'\n'+\
-               "format: standard numpy.genfromtxt()"+'\n'+\
-               "variables = \"x\" \"y\" \"z\" \"M\" \"{0}_mean\" \"{1}_mean\" \"{0}_std\" \"{1}_std\" \"I_{0}\" \"I_{1}\" \"L{0}x\" \"{0}'{1}'_flux\" \"wdir\" \"wtref\"".format(wind_comps[name][file][0], wind_comps[name][file][1]))
+               fmt='%.8f',header=('flow and turbulence parameters\n'
+               'units: dimensionless!\n'
+               'format: standard numpy.genfromtxt()\n'
+               'variables = \"x\" \"y\" \"z\" \"M\" \"{0}_mean\" \"{1}_mean\"'
+               '\"{0}_std\" \"{1}_std\" \"I_{0}\" \"I_{1}\" \"L{0}x\" '
+               '\"{0}\'{1}\'_flux\" \"wdir\" '
+               '\"wtref\"'.format(wind_comps[name][file][0],
+                                  wind_comps[name][file][1])))
     
     if mode == 1:
         # Plot results of a vertical profile

@@ -18,6 +18,7 @@ __all__ = [
     'plot_spectra',
     'plot_Re_independence',
     'plot_convergence_test',
+    'plot_convergence',
 ]
 
 def plot_wrapper(x, y, lat=False, ax=None, **kwargs):
@@ -485,145 +486,54 @@ def plot_Re_independence(data,wtref,yerr=0,ax=None,**kwargs):
     return ret
 
 
-def plot_convergence_test(data1,data2,data3,data4,data5,data6,data7,data8,
-                          data9,wtref=1,ref_length=1,scale=1):
-    """ Plots results of convergence tests performed on each quantity
-    into one 3x3 plot. This is a very limited function and is only intended to
-    give a brief overview of the convergence test results using dictionaries as
-    input objects. wtref, ref_length and scale are used to determine a 
-    dimensionless time unit on the x-axis. Default values for each are 1.
-    @parameter: data[0,...,9], type = dictionary
+def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None):
+    """Plots results of convergence tests  from data. This is a very limited 
+    function and is only intended to give a brief overview of the convergence
+    rest results using dictionaries as input objects. wtref, ref_length and 
+    scale are used to determine a dimensionless time unit on the x-axis. 
+    Default values for each are 1.
+    @parameter: data_dict, type = dictionary
     @parameter: wtref, type = float or int
     @parameter: ref_length, type = float or int
-    @parameter: scale, type = float or int"""
+    @parameter: scale, type = float or int
+    @parameter: ylabel, type = string
+    @parameter: ax: axis passed to function"""
+
+    if ax is None:
+        ax = plt.gca()
     
-    fig, ax = plt.subplots(3,3, figsize=(24,14))
-    for i, key in enumerate([key for key in data1.keys()]):
-        ax[0,0].plot([i] * len(data1[key]), data1[key], color='navy',
+    handles = []   
+    
+    for i, key in enumerate([key for key in data.keys()]):
+        l, = ax.plot([i] * len(data[key]), data[key], color='navy',
                       linestyle='None',marker='o', markersize=15)                  
-        ax[0,0].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data2.keys()]):
-        ax[0,1].plot([i] * len(data2[key]), data2[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[0,1].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data3.keys()]):
-        ax[0,2].plot([i] * len(data3[key]), data3[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[0,2].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data4.keys()]):
-        ax[1,0].plot([i] * len(data4[key]), data4[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[1,0].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data5.keys()]):
-        ax[1,1].plot([i] * len(data5[key]), data5[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[1,1].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data6.keys()]):
-        ax[1,2].plot([i] * len(data6[key]), data6[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[1,2].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data7.keys()]):
-        ax[2,0].plot([i] * len(data7[key]), data7[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[2,0].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data8.keys()]):
-        ax[2,1].plot([i] * len(data8[key]), data8[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[2,1].grid(True)
-    del i, key
-    for i, key in enumerate([key for key in data9.keys()]):
-        ax[2,2].plot([i] * len(data9[key]), data9[key],  color='navy',
-                      linestyle='None',marker='o', markersize=15)
-        ax[2,2].grid(True)
-    del i, key
+        ax.grid(True)
+        handles.append(l)
     
-    for i in range(ax.shape[0]):
-        for k in range(ax.shape[1]):
-            ax[i][k].tick_params(labelsize=14)
-        #    ax[k].spines['left'].set_position('zero')
-            ax[i][k].spines['right'].set_color('none') # .set_visible(False)
-        #    ax[k].spines['bottom'].set_position('zero')
-            ax[i][k].spines['top'].set_color('none') # .set_visible(False)
-            ax[i][k].xaxis.set_ticks_position('bottom')  
-            ax[i][k].yaxis.set_ticks_position('left')
-    del i,k 
-    
-    xticklabels=[key for key in data1.keys()][0::10]
+    xticklabels=[key for key in data.keys()]
     xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[0,0].set(xticks=np.arange(0,len(data1.keys())+1,10),
+    ax.set(xticks=np.arange(0,len(data.keys())+1),
               xticklabels=xticklabels,
-              xlim=(-0.5, len(data1.keys())-0.5))
-    ax[0,0].set_ylabel('data1')
-    ax[0,0].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+              xlim=(-0.5, len(data.keys())-0.5))
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
     
-    xticklabels=[key for key in data2.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[0,1].set(xticks=np.arange(0,len(data2.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data2.keys())-0.5))
-    ax[0,1].set_ylabel('data2')
-    ax[0,1].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+    return handles
     
-    xticklabels=[key for key in data3.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[0,2].set(xticks=np.arange(0,len(data3.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data3.keys())-0.5))
-    ax[0,2].set_ylabel('data3')
-    ax[0,2].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+
+def plot_convergence(data_dict,ncols=3,**kwargs):
+    """ Plots results of convergence tests performed on any number of 
+    quantities in one plot. ncols specifies the number of columns desired in
+    the output plot. **kwargs contains any parameters to be passed to 
+    plot_convergence_test, such as wtref, ref_length and scale. See doc_string
+    of plot_convergence_test for more details.
+    @parameter: data_dict, type = dictionary
+    @parameter: ncols, type = int
+    @parameter: **kwargs keyword arguments passed to plot_convergence_test"""
     
-    xticklabels=[key for key in data4.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[1,0].set(xticks=np.arange(0,len(data4.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data4.keys())-0.5))
-    ax[1,0].set_ylabel('data4')
-    ax[1,0].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data5.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[1,1].set(xticks=np.arange(0,len(data5.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data5.keys())-0.5))
-    ax[1,1].set_ylabel('data5')
-    ax[1,1].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data6.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[1,2].set(xticks=np.arange(0,len(data6.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data6.keys())-0.5))
-    ax[1,2].set_ylabel('data6')
-    ax[1,2].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data7.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[2,0].set(xticks=np.arange(0,len(data7.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data7.keys())-0.5))
-    ax[2,0].set_ylabel('data7')
-    ax[2,0].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data8.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[2,1].set(xticks=np.arange(0,len(data8.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data8.keys())-0.5))
-    ax[2,1].set_ylabel('data8')
-    ax[2,1].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    
-    xticklabels=[key for key in data9.keys()][0::10]
-    xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
-    ax[2,2].set(xticks=np.arange(0,len(data9.keys())+1,10),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data9.keys())-0.5))
-    ax[2,2].set_ylabel('data9')
-    ax[2,2].set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
-    plt.tight_layout()
+    fig, axes = plt.subplots(ncols,int(np.ceil(len(data_dict.keys())/ncols)),
+                             figsize=(24,14))
+    for (key,data), ax in zip(data_dict.items(), axes.flat):
+        plot_convergence_test(data,ylabel=key,ax=ax,**kwargs)        
+
+    return axes
