@@ -73,6 +73,8 @@ $ pip install --editable .
 The `--editable` flag ensures that changes to project files directly affect the
 package's behaviour in the Python environment.
 
+For Windows users, who are not familiar mit pip on windows, you can revert to the 'quick and dirty' method. Copy the windtunnel file (and example_data_analysis.py, if required) to your working directory. WARNING! Doing this leaves it up to the user to install all missing dependencies (ie. required packages for proper functionality of windtunnel).  
+
 # Useful information
 In order to see the docstring and information on the parameters expected by a function, call [functionname]? in the console. Example:
 ```
