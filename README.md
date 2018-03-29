@@ -63,7 +63,15 @@ mode = 1
 ```
 
 # Installing the windtunnel package
-TODO
+The easiest way to work and develop the windtunnel package is to clone the
+project and install it using pip:
+```bash
+$ git clone https://github.com/bschliffke/windtunnel.git
+$ cd windtunnel
+$ pip install --editable .
+```
+The `--editable` flag ensures that changes to project files directly affect the
+package's behaviour in the Python environment.
 
 # Useful information
 In order to see the docstring and information on the parameters expected by a function, call [functionname]? in the console. Example:
