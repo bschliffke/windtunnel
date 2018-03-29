@@ -3,7 +3,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import windtunnel as wt
-plt.style.use('typhon.mplstyle')
 
 
 __all__ = [
