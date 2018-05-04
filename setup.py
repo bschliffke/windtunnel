@@ -30,6 +30,6 @@ setup(
         'numpy>=1.10.4',
         'pandas',
         'scipy',
-        'skimage',
+        'scikit-image',
     ],
 )
