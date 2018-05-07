@@ -264,7 +264,8 @@ def count_nan_chunks(data):
 def get_lux_referencedata():
     """Reads and returns reference data for the integral length scale (Lux).
     This function takes no parameters. """
-    ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
+    if ref_path == None:
+       ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
     Lux_10 = np.genfromtxt(ref_path + 'Lux_data.dat',skip_header=7,skip_footer=421,
                        usecols=(0,1),unpack=True)
     Lux_1 = np.genfromtxt(ref_path + 'Lux_data.dat',skip_header=32,skip_footer=402,
@@ -285,7 +286,8 @@ def get_turb_referencedata(component):
     """Reads and returns the VDI reference data for the turbulence intensity of
     component.
     @parameter: component, type = string """
-    ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
+    if ref_path == None:
+       ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
      ###  READ turbulence intensity - reference: VDI
     if component == 'I_u':
         I_u_slight = np.genfromtxt(ref_path + 'Iu_data.dat',skip_header=11,
@@ -336,7 +338,8 @@ def find_nearest(array,value):
 def get_reference_spectra(height):
     """ Get referemce spectra from pre-defined location."""
     #  REFERENCE SPAECTRA RANGE FIT
-    ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
+    if ref_path == None:
+       ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
     ref_heights = np.array([7.00,10.50,14.00,17.50,22.75,42.00,70.00,105.00])
     value = find_nearest(ref_heights,height)
     value = '{:03.2f}'.format(value)

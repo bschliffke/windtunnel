@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 # Create logger
 logger = logging.getLogger()
 
-# Import style sheet
-plt.style.use('typhon.mplstyle')
+
+
 
 #%%#
 # This is an example script. It can be modified to your personal needs.
@@ -19,8 +19,8 @@ plt.style.use('typhon.mplstyle')
 # file type for plots, name of files, scale and desired mode of analysis.
 path = 'path_to_your_timeseries'
 wtref_path = 'path_to_your_wtref'
-plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
-txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
+plot_path = './plots/'
+txt_path = './postprocessed/'
 file_type = 'pdf'
 namelist =  []
 scale = 500
@@ -43,6 +43,8 @@ for name in namelist:
         ts.get_wind_comps(path+file)
         ts.get_wtref(wtref_path,name,index=i)
         ts.nondimensionalise()
+        ts.weighted_component_mean
+        ts.weighted_component_variance
         ts.adapt_scale(scale)
         ts.equidistant()
         ts.mask_outliers()

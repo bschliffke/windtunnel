@@ -38,6 +38,10 @@ class Timeseries():
         self.t_transit = t_transit
         self.u = u
         self.v = v
+        self.weighted_u_mean = None
+        self.weighted_v_mean = None
+        self.weighted_u_var = None
+        self.weighted_v_var = None
         self.scale = None
         self.wtref = None
         self.t_eq = None
@@ -172,44 +176,41 @@ class Timeseries():
 
         transit_time_sum = np.sum(self.t_transit)
         eta = [t/transit_time_sum for t in self.t_transit]
-        u_tmp = []
-        v_tmp = []        
+        u_tmp = np.array([])
+        v_tmp = np.array([])
         
-        for i,x in enumerate(self.u):
-            u_tmp.append((self.u[i]*self.t_transit[i])/transit_time_sum)
-            v_tmp.append((self.v[i]*self.t_transit[i])/transit_time_sum)
+        u_tmp = (self.u*self.t_transit)/transit_time_sum
+        v_tmp = (self.v*self.t_transit)/transit_time_sum
             
-        self.u_mean = np.sum(u_tmp)/np.sum(eta)
-        self.v_mean = np.sum(v_tmp)/np.sum(eta)
+        self.weighted_u_mean = np.sum(u_tmp)/np.sum(eta)
+        self.weighted_v_mean = np.sum(v_tmp)/np.sum(eta)
 
-        return self.u_mean, self.v_mean
+        return float(self.weighted_u_mean), float(self.weighted_v_mean)
     
-#    TODO:
-#    @property
-#    def weighted_component_variance(self):
-#        """ Weigh the u and v component with its transit time through the 
-#        measurement volume. This is analoguous to the processing of the raw 
-#        data in the BSA software. Transit time weighting removes a possible
-#        bias towards higher wind velocities. Returns the weghted u and v 
-#        variance."""
-#
-#        transit_time_sum = np.sum(self.t_transit)
-#        eta = [t/transit_time_sum for t in self.t_transit]
-#        u_tmp = []
-#        v_tmp = []        
-#        
-#        for i,x in enumerate(self.u):
-#            u_tmp.append((self.u[i]*self.t_transit[i])/transit_time_sum)
-#            v_tmp.append((self.v[i]*self.t_transit[i])/transit_time_sum)
-#            
-#        self.u_mean = np.sum(u_tmp)/np.sum(eta)
-#        self.v_mean = np.sum(v_tmp)/np.sum(eta)
-#
-#        return self.u_var, self.v_var
+    @property
+    def weighted_component_variance(self):
+        """ Weigh the u and v component with its transit time through the
+        measurement volume. This is analoguous to the processing of the raw
+        data in the BSA software. Transit time weighting removes a possible
+        bias towards higher wind velocities. Returns the weighted u and v
+        component variance."""
+
+        transit_time_sum = np.sum(self.t_transit)
+        eta = [t/transit_time_sum for t in self.t_transit]
+        u_tmp = np.array([])
+        v_tmp = np.array([])
+
+        u_tmp = ((self.u-np.mean(self.u))**2)*(self.t_transit/transit_time_sum)
+        v_tmp = ((self.v-np.mean(self.u))**2)*(self.t_transit/transit_time_sum)
+
+        self.weighted_u_var = np.sum(u_tmp)/np.sum(eta)
+        self.weighted_v_var = np.sum(v_tmp)/np.sum(eta)
+
+        return float(self.weighted_u_var), float(self.weighted_v_var)
 
     @property
     def mean_magnitude(self):
-        """ Calculate mean wind magnitude from components. """
+        """ Calculate mean wind magnitude from unweighted components. """
         if self.magnitude is None:
             self.calc_magnitude()
             
@@ -231,7 +232,7 @@ class Timeseries():
         @parameter: filename, type = str
         @parameter: out_dir, type = str"""
         if out_dir is None:
-            out_dir = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
+            out_dir = './'
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
 
@@ -294,16 +295,16 @@ def get_ratio_referencedata():
 
 
 # TODO: alpha/z0 ratio plot (optional)
-# TODO: documentation (sphinx) and readme (github -> installation)
+# TODO: documentation (sphinx)
 
 #%%#
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
-path = '//ewtl2/projects/Hafencity/coincidence/time series/'
-wtref_path = '//ewtl2/projects/Hafencity/wtref/'
-plot_path = 'C:/Users/{0}/Desktop/LDA-Analysis/plots/'.format(os.getlogin())
-txt_path = 'C:/Users/{0}/Desktop/LDA-Analysis/postprocessed/'.format(os.getlogin())
+path = '/home/benny/Downloads/data/'
+wtref_path = '/home/benny/Downloads/data/wtref/'
+plot_path = './'
+txt_path = './'
 file_type = 'pdf'
 namelist = ['HC_BL_UW_139']#['HC_BL_UW_130']['HC_KM_010']['HC_RZU_UV_011']['HC_LAH_UV_015']
 scale = 500
@@ -326,6 +327,7 @@ for name in namelist:
         ts.get_wind_comps(path+file)
         ts.get_wtref(wtref_path,name,index=i)
         ts.weighted_component_mean
+        ts.weighted_component_variance
         ts.nondimensionalise()
         ts.adapt_scale(scale)
         ts.equidistant()
