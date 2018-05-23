@@ -32,6 +32,8 @@ for name in namelist:
         ts.adapt_scale(scale)
         ts.equidistant()
         ts.mask_outliers()
+        ts.weighted_component_mean
+        ts.weighted_component_variance
         ts.mean_magnitude
         ts.mean_direction
         ts.save2file(file)
