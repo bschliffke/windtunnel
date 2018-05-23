@@ -98,8 +98,8 @@ def plot_hist(data,ax=None,**kwargs):
     return ret
 
 
-def plot_turb_int(data,heights,yerr=0,component='I_u',lat=False,ax=None,
-                  **kwargs):
+def plot_turb_int(data,heights,yerr=0,component='I_u',lat=False,
+                  ref_path=None, ax=None,**kwargs):
     """ Plots turbulence intensities from data with VDI reference data for 
     their respective height. yerr specifies the uncertainty. Its default value
     is 0. If lat is True then a lateral profile is created.
@@ -108,12 +108,14 @@ def plot_turb_int(data,heights,yerr=0,component='I_u',lat=False,ax=None,
     @parameter: yerr, type = int or float
     @parameter: component, type = string
     @parameter: lat, type = boolean
+    @parameter: ref_path, type = string
     @parameter: ax, axis passed to function    
     @parameter **kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
        
-    slight,moderate,rough,very_rough = wt.get_turb_referencedata(component)
+    slight,moderate,rough,very_rough = wt.get_turb_referencedata(component,
+                                                                 ref_path)
     ret = []
     for turb_int, height in zip(data, heights):  
         if lat == False:
@@ -349,7 +351,8 @@ def plot_winddata_log(mean_magnitude,u_mean,v_mean,heights,yerr=0,ax=None,
     return ret
 
 
-def plot_lux(Lux, heights, err=0, lat=False, ax=None, **kwargs):
+def plot_lux(Lux, heights, err=0, lat=False, ref_path=None, ax=None,
+             **kwargs):
     """Plots Lux data on a double logarithmic scale with reference data. yerr
     specifies the uncertainty. Its default value is 0. If lat
     is True then a lateral profile, without a loglog scale, is created.
@@ -357,12 +360,14 @@ def plot_lux(Lux, heights, err=0, lat=False, ax=None, **kwargs):
     @parameter: heights, type = list or np.array
     @parameter: err, type = int or float
     @parameter: lat, type = boolean
+    @parameter: ref_path = string
     @parameter ax: axis passed to function
     @parameter **kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
        
-    Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = wt.get_lux_referencedata()
+    Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = \
+        wt.get_lux_referencedata(ref_path)
     ret = []
     if lat == False:
         Lux = ax.errorbar(Lux,heights,xerr=err,fmt='o',color='navy',)
@@ -404,9 +409,11 @@ def plot_lux(Lux, heights, err=0, lat=False, ax=None, **kwargs):
 
 
 def plot_spectra(f_sm, S_uu_sm, S_vv_sm, S_uv_sm, u_aliasing, v_aliasing,
-                 uv_aliasing, wind_comps, height, ax=None, **kwargs):
+                 uv_aliasing, wind_comps, height, ref_path=None,
+                 ax=None, **kwargs):
     """Plots spectra using INPUT with reference data.
     @parameter: ???
+    @parameter: ref_path, type = string
     @parameter ax: axis passed to function
     @parameter **kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
@@ -415,7 +422,7 @@ def plot_spectra(f_sm, S_uu_sm, S_vv_sm, S_uv_sm, u_aliasing, v_aliasing,
     xsmin = min(10**-4,np.min(f_sm[np.where(f_sm>0)]))
     xsmax = max(100,np.max(f_sm[np.where(f_sm>0)]))
     ref_x = np.logspace(np.log10(xsmin),np.log10(xsmax),50)
-    ref_specs = wt.get_reference_spectra(height)
+    ref_specs = wt.get_reference_spectra(height,ref_path)
         
     h1 = ax.loglog(f_sm[:u_aliasing],S_uu_sm[:u_aliasing],'ro',markersize=3,
                label=r'wind tunnel $'+'{0}{0}'.format(wind_comps[0])+'$')

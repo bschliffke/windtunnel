@@ -52,7 +52,7 @@ def equ_dist_ts(arrival_time,eq_dist_array,data):
    """ Create a time series with constant time steps. The nearest point of the 
    original time series is used for the corresponding time of the equi-distant
    time series.
-   @parameter: arrival_time, type = np.array 
+   @parameter: arrival_time, type = np.array
    @parameter: eq_dist_array, type = np.array
    @parameter: data, type = np.array"""
    
@@ -261,7 +261,7 @@ def count_nan_chunks(data):
     return chunk_sizes, N
 
 
-def get_lux_referencedata():
+def get_lux_referencedata(ref_path=None):
     """Reads and returns reference data for the integral length scale (Lux).
     This function takes no parameters. """
     if ref_path == None:
@@ -282,7 +282,7 @@ def get_lux_referencedata():
     return Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough
 
 
-def get_turb_referencedata(component):
+def get_turb_referencedata(component,ref_path=None):
     """Reads and returns the VDI reference data for the turbulence intensity of
     component.
     @parameter: component, type = string """
@@ -335,7 +335,7 @@ def find_nearest(array,value):
     return array[idx]
 
 
-def get_reference_spectra(height):
+def get_reference_spectra(height,ref_path=None):
     """ Get referemce spectra from pre-defined location."""
     #  REFERENCE SPAECTRA RANGE FIT
     if ref_path == None:

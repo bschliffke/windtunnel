@@ -19,6 +19,7 @@ logger = logging.getLogger()
 # file type for plots, name of files, scale and desired mode of analysis.
 path = 'path_to_your_timeseries'
 wtref_path = 'path_to_your_wtref'
+ref_path = 'path_to_reference_data'
 plot_path = './plots/'
 txt_path = './postprocessed/'
 file_type = 'pdf'
@@ -309,31 +310,37 @@ for name in namelist:
         # Wind components, logarithmic y-axis
         plt.figure(1)
         wt.plots.plot_winddata_log(mean_mag,u_mean,v_mean,heights)
+        plt.tight_layout()
         plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type)
         
         # Turbulence intensity of the first component
         plt.figure(2)
         wt.plots.plot_turb_int(I_u,heights)
+        plt.tight_layout()
         plt.savefig(plot_path + 'I_u_' + name + '.' + file_type)
     
         # Turbulence intensity of the second component
         plt.figure(3)
         wt.plots.plot_turb_int(I_v,heights,component='I_w')
+        plt.tight_layout()
         plt.savefig(plot_path + 'I_w_' + name + '.' + file_type)
     
         # Profile of the fluxes
         plt.figure(4) 
         wt.plots.plot_fluxes(fluxes,heights,component='w')
+        plt.tight_layout()
         plt.savefig(plot_path + 'fluxes_' + name + '.' + file_type)
     
         # Profiles of the fluxes, logarithmic y-axis
         plt.figure(5)
         wt.plots.plot_fluxes_log(fluxes,heights,component='w')
+        plt.tight_layout()
         plt.savefig(plot_path + 'fluxes_log_' + name + '.' + file_type)
     
         # Double logarithmic profile of Lux data
         plt.figure(6)
         wt.plots.plot_lux(lux,heights,component='w')
+        plt.tight_layout()
         plt.savefig(plot_path + 'Lux_' + name + '.' + file_type)
         
     if mode == 2:
@@ -341,24 +348,29 @@ for name in namelist:
         # Wind components
         plt.figure(0)
         wt.plots.plot_winddata(mean_mag,u_mean,v_mean,y,lat=True)
+        plt.tight_layout()
         plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
         
         # Turbulence intensity of the first component
         plt.figure(1)
         wt.plots.plot_turb_int(I_u,y,lat=True)
+        plt.tight_layout()
         plt.savefig(plot_path + 'I_u_' + name + '.' + file_type)
     
         # Turbulence intensity of the second component
         plt.figure(2)
         wt.plots.plot_turb_int(I_v,y,component='I_w',lat=True)
+        plt.tight_layout()
         plt.savefig(plot_path + 'I_w_' + name + '.' + file_type)
     
         # Profile of the fluxes
         plt.figure(3) 
         wt.plots.plot_fluxes(fluxes,y,component='w',lat=True)
+        plt.tight_layout()
         plt.savefig(plot_path + 'fluxes_' + name + '.' + file_type)
     
         # Lateral profile of Lux data
         plt.figure(4)
         wt.plots.plot_lux(lux,y,component='w',lat=True)
+        plt.tight_layout()
         plt.savefig(plot_path + 'Lux_' + name + '.' + file_type)
