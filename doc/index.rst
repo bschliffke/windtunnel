@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 windtunnel documentation
-====================
+========================
 
 A collection of tools for boundary layer analysis with Python 3.
 

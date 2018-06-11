@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 import numpy as np
 import logging
-import os
 import windtunnel as wt
 import matplotlib.pyplot as plt
 
@@ -30,6 +28,10 @@ scale = 500
 #3 = convergence test
 #4 = Reynolds Number Independence
 mode = 1
+
+# Check if all necessary output directories exist
+wt.check_directory(plot_path)
+wt.check_directory(txt_path)
 
 time_series = {}
 time_series.fromkeys(namelist)

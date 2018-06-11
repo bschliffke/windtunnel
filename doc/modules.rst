@@ -10,7 +10,7 @@ plots
 .. toctree::
    :maxdepth: 3
 
-   windtunnel.plots
+   plots
 
 utils
 -----
@@ -18,7 +18,7 @@ utils
 .. toctree::
    :maxdepth: 2
 
-   windtunnel.utils
+   utils
 
 stats
 -----
@@ -26,7 +26,7 @@ stats
 .. toctree::
    :maxdepth: 2
 
-   windtunnel.stats
+   stats
 
 timeseries
 ----------
@@ -34,7 +34,7 @@ timeseries
 .. toctree::
    :maxdepth: 2
 
-   windtunnel.timeseries
+   timeseries
 
 * :ref:`genindex`
 * :ref:`modindex`

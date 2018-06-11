@@ -31,6 +31,7 @@ __all__ = [
     'get_turb_referencedata',
     'find_nearest',
     'get_reference_spectra',
+    'check_directory',
 ]
 
 def find_block(indata, length, tolerance):    
@@ -346,3 +347,11 @@ def get_reference_spectra(height,ref_path=None):
     ref_specs = np.genfromtxt(ref_path + 'ref_spectra_S_ii_z_' +value+'m.txt')
 
     return ref_specs
+
+
+def check_directory(directory):
+    """ Checks if directory exists. If directory doesn't exist, it is created.
+    @parameter: directory, type = string """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print("Desired directory created.")

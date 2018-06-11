@@ -3,7 +3,6 @@
 """
 
 import logging
-import os
 
 from .utils import *
 from .stats import *
