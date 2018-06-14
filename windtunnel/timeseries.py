@@ -32,9 +32,9 @@ class Timeseries():
         self.u = u
         self.v = v
         self.weighted_u_mean = None
-        self.weighted_v_mean = None
+        self.weighted_comp_2_mean = None
         self.weighted_u_var = None
-        self.weighted_v_var = None
+        self.weighted_comp_2_var = None
         self.scale = None
         self.wtref = None
         self.t_eq = None
@@ -176,9 +176,9 @@ class Timeseries():
         v_tmp = (self.v*self.t_transit)/transit_time_sum
 
         self.weighted_u_mean = np.sum(u_tmp)/np.sum(eta)
-        self.weighted_v_mean = np.sum(v_tmp)/np.sum(eta)
+        self.weighted_comp_2_mean = np.sum(v_tmp)/np.sum(eta)
 
-        return float(self.weighted_u_mean), float(self.weighted_v_mean)
+        return float(self.weighted_u_mean), float(self.weighted_comp_2_mean)
 
     @property
     def weighted_component_variance(self):
@@ -194,12 +194,12 @@ class Timeseries():
         v_tmp = np.array([])
 
         u_tmp = ((self.u-np.mean(self.u))**2)*(self.t_transit/transit_time_sum)
-        v_tmp = ((self.v-np.mean(self.u))**2)*(self.t_transit/transit_time_sum)
+        v_tmp = ((self.v-np.mean(self.v))**2)*(self.t_transit/transit_time_sum)
 
         self.weighted_u_var = np.sum(u_tmp)/np.sum(eta)
-        self.weighted_v_var = np.sum(v_tmp)/np.sum(eta)
+        self.weighted_comp_2_var = np.sum(v_tmp)/np.sum(eta)
 
-        return float(self.weighted_u_var), float(self.weighted_v_var)
+        return float(self.weighted_u_var), float(self.weighted_comp_2_var)
 
     @property
     def mean_magnitude(self):
