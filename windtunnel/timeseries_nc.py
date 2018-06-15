@@ -5,16 +5,17 @@ import windtunnel as wt
 
 
 logger = logging.getLogger()
-__all__ = ['Timeseries']
+__all__ = ['Timeseries_nc']
 
-class Timeseries():
+class Timeseries_nc():
     """ Timeseries is a class that holds data collected by the BSA software in
-    the standard BSA software output. The class can hold die raw timeseries,
-    the corresponding wtref, the components and coordinates of each
-    measurement as well as the mean wind magnitude and the mean wind direction.
-    The raw timeseries can be processed by nondimensionalising it, adapting the
-    scale, making it equidistant and masking outliers. All the information in
-    a Timeseries object can be saved to a txt file.
+    non-coincidence mode using the standard BSA software output. The class can
+    hold die raw timeseries, the corresponding wtref, the components and 
+    coordinates of each measurement as well as the mean wind magnitude and the
+    mean wind direction. The raw timeseries can be processed by 
+    nondimensionalising it, adapting the scale, making it equidistant and 
+    masking outliers. All the information in a Timeseries object can be saved
+    to a txt file.
     @parameter: u, type = np.array
     @parameter: v, type = np.array
     @parameter: x, type = float
@@ -22,19 +23,21 @@ class Timeseries():
     @parameter: z, type = float
     @parameter: t_arr, type = np.array
     @parameter: t_transit, type = np.array"""
-    def __init__(self,u,v,x=None,y=None,z=None,t_arr=None,t_transit=None):
-        """ Initialise Timerseries() object. """
+    def __init__(self,comp_1,comp_2,x=None,y=None,z=None,t_arr=None,
+                 t_transit=None):
+        """ Initialise Timerseries_nc() object. """
         self.x = x
         self.y = y
         self.z = z
         self.t_arr = t_arr
         self.t_transit = t_transit
-        self.u = u
-        self.v = v
+        self.comp_1 = comp_1
+        self.comp_2 = comp_2
         self.weighted_u_mean = None
-        self.weighted_comp_2_mean = None
+        self.weighted_v_mean = None
         self.weighted_u_var = None
-        self.weighted_comp_2_var = None
+        self.weighted_v_var = None
+        self.pair_components = None
         self.scale = None
         self.wtref = None
         self.t_eq = None
@@ -63,10 +66,13 @@ class Timeseries():
                     z = float(line.split(";")[-1][:-3])
                     break
 
-        t_arr, t_transit, u, v = np.genfromtxt(filename,usecols=(1,2,3,4),
-                                               skip_header=6,unpack=True)
+        t_arr_1, t_transit_1, comp_1, t_arr_2, t_transit_2, comp_2 = \
+                                    np.genfromtxt(filename,
+                                                  usecols=(1,2,3,4,5,6),
+                                                  skip_header=6,unpack=True)
 
-        return cls(u,v,x,y,z,t_arr,t_transit)
+        return cls(comp_1,comp_2,x,y,z,t_arr_1,t_transit_1,t_arr_2,t_transit_2)
+
 
     def get_wtref(self,wtref_path,filename,index=0,vscale=1.):
         """Reads wtref-file selected by the time series name 'filename' and
@@ -106,8 +112,8 @@ class Timeseries():
             raise Warning('No value for wtref found. Run get_wtref(). wtref\
             set to 1')
 
-        self.u = self.u/self.wtref
-        self.v = self.v/self.wtref
+        self.comp_1 = self.comp_1/self.wtref
+        self.comp_2 = self.comp_2/self.wtref
 
     def adapt_scale(self,scale):
         """ Convert timeseries from model scale to full scale.
@@ -117,28 +123,41 @@ class Timeseries():
         self.y = self.y * self.scale/1000           #[m]
         self.z = self.z * self.scale/1000           #[m]
         self.t_arr = self.t_arr * self.scale/1000   #[s]
+        
+    def pair_components(self,atol=1):
+        """ Pair components in comp_1 and comp_2 using atol as absolute
+        tolerance to match a pair of measurements. atol is set to 1 as default,
+        its unit is [ms].
+        @parameter: atol, type = float or int """
+
+        tmp_1 = self.comp_1[np.where(np.isclose(self.t_arr_1,self.t_arr_2,
+                                                atol))]
+        tmp_2 = self.comp_2[np.where(np.isclose(self.t_arr_1,self.t_arr_2,
+                                                atol))]
+
+        self.paired_components = np.transpose(np.vstack([tmp_1,tmp_2]))
 
     def equidistant(self):
         """ Create equidistant time series. """
         self.t_eq = np.linspace(self.t_arr[0],self.t_arr[-1],len(self.t_arr))
-        self.u = wt.equ_dist_ts(self.t_arr,self.t_eq,self.u)
-        self.v = wt.equ_dist_ts(self.t_arr,self.t_eq,self.v)
+        self.comp_1 = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_1)
+        self.comp_2 = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_2)
 
     def mask_outliers(self,std_mask=5.):
         """ Mask outliers and print number of outliers. std_mask specifies the
         threshold for a value to be considered an outlier. 5 is the default
         value for std_mask.
         @parameter: std_mask, type = float"""
-        u_size = np.size(self.u)
-        v_size = np.size(self.v)
+        u_size = np.size(self.comp_1)
+        v_size = np.size(self.comp_2)
 
         # Mask outliers
-        u_mask = self.u<(std_mask*np.std(self.u)+np.mean(self.u))
-        v_mask = self.v<(std_mask*np.std(self.v)+np.mean(self.v))
+        u_mask = self.comp_1<(std_mask*np.std(self.comp_1)+np.mean(self.comp_1))
+        v_mask = self.comp_2<(std_mask*np.std(self.comp_2)+np.mean(self.comp_2))
         mask = np.logical_and(u_mask, v_mask)
 
-        self.u = self.u[mask]
-        self.v = self.v[mask]
+        self.comp_1 = self.comp_1[mask]
+        self.comp_2 = self.comp_2[mask]
 
         # Log outliers in console and to file
         logger.info('Outliers component 1: {} or {:.4f}%'.format(
@@ -152,11 +171,21 @@ class Timeseries():
 
     def calc_magnitude(self):
         """ Calculate wind magnitude from components. """
-        self.magnitude = np.sqrt(self.u**2 + self.v**2)
+        if self.paired_components is None:
+            self.pair_components()
+            print('Pairing components before calculation!')
+            
+        self.magnitude = np.sqrt(self.paired_components[0]**2 +
+                                 self.paired_components[1]**2)
 
     def calc_direction(self):
         """ Calculate wind direction from components. """
-        unit_WD = np.arctan2(self.v,self.u) * 180/np.pi
+        if self.paired_components is None:
+            self.pair_components()
+            print('Pairing components before calculation!')
+            
+        unit_WD = np.arctan2(self.paired_components[1],
+                             self.paired_components[0]) * 180/np.pi
         self.direction = (360 + unit_WD) % 360
 
     @property
@@ -201,15 +230,21 @@ class Timeseries():
     def mean_direction(self):
         """ Calculate mean wind direction from components relative to the wind
         tunnels axis."""
-        unit_WD = np.arctan2(np.mean(self.v),np.mean(self.u)) * 180/np.pi
+        if self.paired_components is None:
+            self.pair_components()
+            print('Pairing components before calculation!')
+        
+        unit_WD = np.arctan2(np.mean(self.paired_components[0]),
+                             np.mean(self.paired_components[1]))*\
+                             180/np.pi
         mean_direction = (360 + unit_WD) % 360
 
         return mean_direction
 
     def save2file(self,filename,out_dir=None):
         """ Save data from Timeseries object to txt file. filename must include
-        '.txt' ending. If no out_dir directory is provided
-        'C:/Users/[your_u_number]/Desktop/LDA-Analysis/' is set as standard.
+        '.txt' ending. If no out_dir directory is provided './' is set as
+        standard.
         @parameter: filename, type = str
         @parameter: out_dir, type = str"""
         if out_dir is None:
@@ -218,7 +253,8 @@ class Timeseries():
             os.mkdir(out_dir)
 
         output_file = out_dir + filename
-        np.savetxt(output_file,np.vstack((self.u,self.v)).transpose(),
+        np.savetxt(output_file,
+            np.vstack((self.comp_1,self.comp_2)).transpose(),
             fmt='%.4f',\
             header="General Timeseries data:"+'\n'+\
             ""+'\n'+\
@@ -238,3 +274,4 @@ class Timeseries():
             +""+'\n'+\
             "flow components: {}, {}".format(self.wind_comp1,self.wind_comp2)\
             )
+

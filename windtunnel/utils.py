@@ -24,14 +24,17 @@ __all__ = [
     'adapt_scale',
     'equidistant',
     'mask_outliers',
+    'mask_outliers_wght',
     'get_pdf_max',
-    'print_to_mill',
     'count_nan_chunks',
     'get_lux_referencedata',
     'get_turb_referencedata',
     'find_nearest',
     'get_reference_spectra',
     'check_directory',
+    'transit_time_weighted_mean',
+    'transit_time_weighted_var',
+    'transit_time_weighted_flux',
 ]
 
 def find_block(indata, length, tolerance):    
@@ -219,6 +222,43 @@ def mask_outliers(u,v,std_mask=5.):
 
     return u,v
 
+
+def mask_outliers_wght(transit_time,u,v,std_mask=5.):
+    """ Mask outliers and print number of outliers. std_mask specifies the
+    threshold for a value to be considered an outlier. 5 is the default 
+    value for std_mask. This function usues time transit time weighted 
+    statistics.
+    @parameter: u, type = np.array
+    @parameter: v, type = np.array
+    @parameter: std_mask, type = float"""
+    
+    u_size = np.size(u)
+    v_size = np.size(v)
+
+    # Mask outliers
+    u_mask = u<(std_mask*(np.sqrt(wt.transit_time_weighted_var(transit_time,u))+
+                                wt.transit_time_weighted_mean(transit_time,u)))
+    v_mask = v<(std_mask*(np.sqrt(wt.transit_time_weighted_var(transit_time,v))+
+                                wt.transit_time_weighted_mean(transit_time,v)))
+
+    mask = np.logical_and(u_mask, v_mask)
+
+    u = u[mask]
+    v = v[mask]
+
+    # Log outliers in console and to file
+    logger.info('Outliers component 1: {} or {:.4f}%'.format(
+        np.size(np.where(~u_mask)), 
+        np.size(np.where(~u_mask))/u_size*100
+    ))
+    logger.info('Outliers component 2: {} or {:.4f}%'.format(
+        np.size(np.where(~v_mask)), 
+        np.size(np.where(~v_mask))/v_size*100
+    ))
+
+    return u,v
+
+
 def get_pdf_max(data):
     """Finds maximum of the probability distribution of data.
     @parameter data: np.array"""
@@ -230,23 +270,6 @@ def get_pdf_max(data):
     result  = bins[np.argsort(nparam_density)[-1]]
     
     return result
-
-
-def print_to_mill(indata,arg1='0'):
-    """indata must be 2D matrix. Prepares a txt file that is readable by the 
-    milling machine in the model workshop. arg1 specifies a reference in the
-    output filename. This function should not be used in this version of the
-    windtunnel package, as the output is not yet machine readable.
-    @parameter: indata, 2D np.array()
-    @parameter: arg1, string"""
-    
-    x = np.arange(indata.shape[0])
-    y = np.arange(indata.shape[1])
-    X, Y = np.meshgrid(x, y)
-    output = np.vstack((X.flatten(), Y.flatten(), indata.flatten())).T
-                      
-    np.savetxt('millingfile_'+ arg1 +'.txt', output, fmt=('%d', '%d', '%.2f'),
-               delimiter=' ')
     
     
 def count_nan_chunks(data):
@@ -355,3 +378,59 @@ def check_directory(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
         print("Desired directory created.")
+
+        
+def transit_time_weighted_mean(transit_time,component):
+    """ Weigh the flow component with its transit time through the
+    measurement volume. This is analoguous to the processing of the raw
+    data in the BSA software. Transit time weighting removes a possible
+    bias towards higher wind velocities. Returns the weighted component mean.
+    @parameter: transit_time, type = np.arrray([])
+    @parameter: component,  type = np.arrray([])"""
+
+    transit_time_sum = np.sum(transit_time)
+    eta = [t/transit_time_sum for t in transit_time]
+    tmp = np.array([])
+
+    tmp = (component*transit_time)/transit_time_sum
+
+    weighted_mean = np.sum(tmp)/np.sum(eta)
+
+    return float(weighted_mean)
+    
+
+def transit_time_weighted_var(transit_time,component):
+    """ Weigh the u and v component with its transit time through the
+    measurement volume. This is analoguous to the processing of the raw
+    data in the BSA software. Transit time weighting removes a possible
+    bias towards higher wind velocities. Returns the weighted u and v
+    component variance.
+    @parameter: transit_time, type = np.arrray([])
+    @parameter: component,  type = np.arrray([])"""
+
+    transit_time_sum = np.sum(transit_time)
+    eta = [t/transit_time_sum for t in transit_time]
+    tmp = np.array([])
+
+    tmp = ((component-np.mean(component))**2)*\
+          (transit_time/transit_time_sum)
+    
+    weighted_var = np.sum(tmp)/np.sum(eta)
+
+    return float(weighted_var)
+
+
+def transit_time_weighted_fluxes(transit_time,component_1,component_2):
+    """ Calculate mean flux using transit time weighted statistics. Transit
+    time weighting removes a possible bias towards higher wind velocities.
+    Returns a mean weighted flux.
+    @parameter: transit_time, type = np.arrray([])
+    @parameter: component_1,  type = np.arrray([])
+    @parameter: component_2,  type = np.arrray([])"""
+
+    transit_time_sum = np.sum(transit_time)
+    weighted_flux = np.sum((component_1-np.mean(component_1))*
+                           (component_2-np.mean(component_2))*transit_time)/\
+                           transit_time_sum
+
+    return float(weighted_flux)

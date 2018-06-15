@@ -45,19 +45,71 @@ def plot_wrapper(x, y, lat=False, ax=None, **kwargs):
     return ret
 
 
-def plot_scatter(x,y,ax=None,**kwargs):
-    """Creates a scatter plot of x and y.
+def plot_scatter(x,y,std_mask=5.,ax=None,**kwargs):
+    """Creates a scatter plot of x and y. All outliers outside of 5 STDs of the
+    components mean value are coloured in orange.
     @parameter: x, type = list or np.array
     @parameter: y, type = list or np.array
+    @parameter: std_mask, float
     @parameter ax: axis passed to function
     @parameter **kwargs : additional keyword arguments passed to plt.scatter()
     """
     # Get current axis
     if ax is None:
        ax = plt.gca()
+       
+    # Find outliers
+    u_mask = x<(std_mask*np.std(x)+np.mean(x))
+    v_mask = y<(std_mask*np.std(y)+np.mean(y))
+    mask = np.logical_and(u_mask, v_mask)
+
+    x_clean = x[mask]
+    y_clean = y[mask]
+    
+    x_outliers = x[~mask]
+    y_outliers = y[~mask]
+    # Plot
+    ret = ax.scatter(x_clean,y_clean, **kwargs)
+    ax.scatter(x_outliers,y_outliers, color='orange', **kwargs)
+    ax.set_ylabel(r'w $[ms^{-1}]$')
+    ax.set_xlabel(r'u $[ms^{-1}]$')
+    ax.grid()
+    
+    return ret
+
+
+def plot_scatter_wght(transit_time,x,y,std_mask=5.,ax=None,**kwargs):
+    """Creates a scatter plot of x and y using time transit time weighted 
+    statistics. All outliers outside of 5 STDs of the components mean value are
+    coloured in orange, as default.
+    @parameter: transit_time, type = np.array
+    @parameter: x, type = list or np.array
+    @parameter: y, type = list or np.array
+    @parameter: std_mask, float
+    @parameter ax: axis passed to function
+    @parameter **kwargs : additional keyword arguments passed to plt.scatter()
+    """
+    # Get current axis
+    if ax is None:
+       ax = plt.gca()
+       
+    # Find outliers
+    x_mask = x<(std_mask*(np.sqrt(wt.transit_time_weighted_var(transit_time,x))+
+                                wt.transit_time_weighted_mean(transit_time,x)))
+    y_mask = y<(std_mask*(np.sqrt(wt.transit_time_weighted_var(transit_time,y))+
+                                wt.transit_time_weighted_mean(transit_time,y)))
+
+    mask = np.logical_and(x_mask, y_mask)
+
+    x_clean = x[mask]
+    y_clean = y[mask]
+    
+    x_outliers = x[~mask]
+    y_outliers = y[~mask]
     
     # Plot
-    ret = ax.scatter(x,y, **kwargs)
+    ret = ax.scatter(x_clean,y_clean, **kwargs)
+    ax.scatter(x_outliers,y_outliers, color='orange', **kwargs)
     ax.set_ylabel(r'w $[ms^{-1}]$')
     ax.set_xlabel(r'u $[ms^{-1}]$')
     ax.grid()

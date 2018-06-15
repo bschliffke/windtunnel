@@ -14,8 +14,11 @@ __all__ = [
     'calc_stats',
     'calc_exceedance_prob',
     'calc_wind_stats',
+    'calc_wind_stats_wght',
     'calc_turb_data',
+    'calc_turb_data_wght',
     'calc_lux_data',
+    'calc_lux_data_wght',
     'calc_acorr',
     'calc_autocorr',
     'calc_spectra',
@@ -123,6 +126,34 @@ def calc_wind_stats(u_comp,v_comp,wdir=0.):
 
     return data
    
+    
+def calc_wind_stats_wght(transit_time,u_comp,v_comp,wdir=0.):
+    """ Calculate wind data from equidistant times series of u and 
+    v components. wdir is a reference wind direction.
+    @parameter: transit_time, type = np.array
+    @parameter: u_comp, type = np.array
+    @parameter: v_comp, type = np.array
+    @parameter: wdir: int"""
+    
+    mask = mask = np.logical_and(~np.isnan(u_comp),
+                          ~np.isnan(v_comp))
+    u = u_comp[mask]
+    v = v_comp[mask]
+    
+    # TODO: test ways of applying TT weighting to Magnitude
+    Magnitude = np.mean(np.sqrt(u**2+v**2))
+    u_mean = wt.transit_time_weighted_mean(transit_time,u)
+    v_mean = wt.transit_time_weighted_mean(transit_time,v)       
+    Direction = wdir-np.arctan2(v_mean,u_mean)*180/np.pi
+    if Direction>360: Direction-=360
+    if Direction<0: Direction+=360    
+    u_std = np.sqrt(wt.transit_time_weighted_var(transit_time,u))
+    v_std = np.sqrt(wt.transit_time_weighted_var(transit_time,v))
+
+    data = np.array([Magnitude,u_mean,v_mean,u_std,v_std,Direction])
+
+    return data
+
 
 def calc_turb_data(u_comp,v_comp):
     """ Calculate turbulence intensity and turbulent fluxes from equidistant
@@ -151,6 +182,33 @@ def calc_turb_data(u_comp,v_comp):
     data = np.array([I_u,I_v,flux])
     
     return data
+
+
+def calc_turb_data_wght(transit_time,u_comp,v_comp):
+    """ Calculate turbulence intensity and turbulent fluxes from equidistant
+    times series of u and v components using transit time weighted statistics.
+    @parameter: transit_time. type = np.array
+    @parameter: u_compy type = np.array
+    @parameter: v_comp, type = np.array"""    
+    mask = mask = np.logical_and(~np.isnan(u_comp),
+                          ~np.isnan(v_comp))    
+    u = u_comp[mask]
+    v = v_comp[mask]
+    
+    # TODO: test ways of applying TT weighting to M
+    M = np.mean(np.sqrt(u_comp**2 +v_comp**2))
+    u_std = np.sqrt(wt.transit_time_weighted_var(transit_time,u))
+    v_std = np.sqrt(wt.transit_time_weighted_var(transit_time,v))
+    # TURBULENCE INTENSITY
+    I_u = u_std/np.mean(M)
+    I_v = v_std/np.mean(M)
+    # Fluxes
+    flux = wt.transit_time_weighted_fluxes(transit_time,u_comp,v_comp)
+    
+    data = np.array([I_u,I_v,flux])
+    
+    return data
+
 
 def calc_lux_data(dt,u_comp):
     """ Calculates the integral length scale according to R. Fischer (2011) 
@@ -197,6 +255,55 @@ def calc_lux_data(dt,u_comp):
             break
         
     Lux = abs(Lux*np.mean(u_comp)*dt)
+    
+    return Lux
+
+
+def calc_lux_data_wght(transit_time,dt,u_comp):
+    """ Calculates the integral length scale according to R. Fischer (2011) 
+    from an equidistant time series of the u component using time step dt.
+    @parameter: t_eq, type = int or float
+    @parameter: u_comp, type = np.array or list """
+    
+    if np.size(u_comp) < 5:
+        raise Exception('Too few value to estimate Lux!')
+
+    mask = np.where(~np.isnan(u_comp))
+    
+    u = u_comp[mask]
+
+    lag_eq = np.arange(1,np.size(u)+1) * dt# array of time lags
+    u_eq_acorr = calc_acorr(u,np.size(u))# autocorrelation (one sided) of time 
+                                         # series u_eq
+       
+    Lux = 0.
+    # see dissertation R.Fischer (2011) for calculation method
+    for i in range(np.size(u)-2):
+
+        autc1 = u_eq_acorr[i]
+    
+        autc2 = u_eq_acorr[i+1]
+    
+        Lux = Lux + (autc1 + autc2)*0.5
+
+        if autc2>autc1:
+            acorr_fit = np.polyfit(lag_eq[:i],np.log(abs(u_eq_acorr[:i])),deg=1)
+            acorr_fit = np.exp(acorr_fit[0]*lag_eq+acorr_fit[1])
+        
+            if np.min(acorr_fit)<0.001:
+                ix = np.where(acorr_fit<0.001)[0][0]
+        
+            else:
+                ix = acorr_fit.size
+                
+            Lux = Lux+(np.sum(acorr_fit[i+1:ix])+
+                       np.sum(acorr_fit[i+2:ix+1]))*0.5
+            break
+
+        elif autc1 <= 0:
+            break
+        
+    Lux = abs(Lux*wt.transit_time_weighted_mean(transit_time,u_comp)*dt)
     
     return Lux
 

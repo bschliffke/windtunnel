@@ -202,17 +202,11 @@ class Timeseries_nc():
         data in the BSA software. Transit time weighting removes a possible
         bias towards higher wind velocities. Returns the weighted u and v
         component means."""
-
-        transit_time_sum = np.sum(self.t_transit)
-        eta = [t/transit_time_sum for t in self.t_transit]
-        u_tmp = np.array([])
-        v_tmp = np.array([])
-
-        u_tmp = (self.comp_1*self.t_transit)/transit_time_sum
-        v_tmp = (self.comp_2*self.t_transit)/transit_time_sum
-
-        self.weighted_u_mean = np.sum(u_tmp)/np.sum(eta)
-        self.weighted_v_mean = np.sum(v_tmp)/np.sum(eta)
+        
+        self.weighted_u_mean = wt.transit_time_weighted_mean(
+                                                        self.t_transit,self.u)
+        self.weighted_v_mean = wt.transit_time_weighted_mean(
+                                                        self.t_transit,self.v)
 
         return float(self.weighted_u_mean), float(self.weighted_v_mean)
 
@@ -224,18 +218,10 @@ class Timeseries_nc():
         bias towards higher wind velocities. Returns the weighted u and v
         component variance."""
 
-        transit_time_sum = np.sum(self.t_transit)
-        eta = [t/transit_time_sum for t in self.t_transit]
-        u_tmp = np.array([])
-        v_tmp = np.array([])
-
-        u_tmp = ((self.comp_1-np.mean(self.comp_1))**2)*\
-                (self.t_transit/transit_time_sum)
-        v_tmp = ((self.comp_2-np.mean(self.comp_2))**2)*\
-                (self.t_transit/transit_time_sum)
-
-        self.weighted_u_var = np.sum(u_tmp)/np.sum(eta)
-        self.weighted_v_var = np.sum(v_tmp)/np.sum(eta)
+        self.weighted_u_var = wt.transit_time_weighted_var(
+                                                        self.t_transit,self.u)
+        self.weighted_v_var = wt.transit_time_weighted_var(
+                                                        self.t_transit,self.v)
 
         return float(self.weighted_u_var), float(self.weighted_v_var)
 
@@ -296,37 +282,6 @@ class Timeseries_nc():
             "flow components: {}, {}".format(self.wind_comp1,self.wind_comp2)\
             )
 
-
-def plot_scatter(x,y,ax=None,**kwargs):
-    """Creates a scatter plot of x and y. All outliers outside of 5 STDs of the
-    components mean value are coloured in orange.
-    @parameter: x, type = list or np.array
-    @parameter: y, type = list or np.array
-    @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.scatter()
-    """
-    # Get current axis
-    if ax is None:
-       ax = plt.gca()
-       
-    # Find outliers
-    u_mask = x<(5.*np.std(x)+np.mean(x))
-    v_mask = y<(5.*np.std(y)+np.mean(y))
-    mask = np.logical_and(u_mask, v_mask)
-
-    x = x[mask]
-    y = y[mask]
-    
-    x_outliers = x[~mask]
-    y_outliers = y[~mask]
-    # Plot
-    ret = ax.scatter(x,y, **kwargs)
-    ax.scatter(x_outliers,y_outliers, color='orange', **kwargs)
-    ax.set_ylabel(r'w $[ms^{-1}]$')
-    ax.set_xlabel(r'u $[ms^{-1}]$')
-    ax.grid()
-    
-    return ret
 
 def plot_alpha_z0(alpha, z0, alpha_err, z0_err, ax=None, **kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
