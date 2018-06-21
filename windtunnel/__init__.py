@@ -5,9 +5,11 @@
 import logging
 
 from .utils import *
-from .stats import *
+from .flow.stats import *
+# from .concentration.stats import *
 from . import plots
 from .timeseries import *
+from .timeseries_nc import *
 
 # set standards for Logging module
 logging.basicConfig(level=logging.DEBUG,

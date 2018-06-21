@@ -420,7 +420,7 @@ def transit_time_weighted_var(transit_time,component):
     return float(weighted_var)
 
 
-def transit_time_weighted_fluxes(transit_time,component_1,component_2):
+def transit_time_weighted_flux(transit_time,component_1,component_2):
     """ Calculate mean flux using transit time weighted statistics. Transit
     time weighting removes a possible bias towards higher wind velocities.
     Returns a mean weighted flux.

@@ -5,284 +5,13 @@ import logging
 import os
 import windtunnel as wt
 import matplotlib.pyplot as plt
-
+import matplotlib.patches as patches
 # Create logger
 logger = logging.getLogger()
 
 
-# %%#
-# TODO: class Timeseries_nc:
-
-####### USE FROM HERE ON DOWN ################
-class Timeseries_nc():
-    """ Timeseries is a class that holds data collected by the BSA software in
-    non-coincidence mode using the standard BSA software output. The class can
-    hold die raw timeseries, the corresponding wtref, the components and 
-    coordinates of each measurement as well as the mean wind magnitude and the
-    mean wind direction. The raw timeseries can be processed by 
-    nondimensionalising it, adapting the scale, making it equidistant and 
-    masking outliers. All the information in a Timeseries object can be saved
-    to a txt file.
-    @parameter: u, type = np.array
-    @parameter: v, type = np.array
-    @parameter: x, type = float
-    @parameter: y, type = float
-    @parameter: z, type = float
-    @parameter: t_arr, type = np.array
-    @parameter: t_transit, type = np.array"""
-    def __init__(self,comp_1,comp_2,x=None,y=None,z=None,t_arr=None,
-                 t_transit=None):
-        """ Initialise Timerseries_nc() object. """
-        self.x = x
-        self.y = y
-        self.z = z
-        self.t_arr = t_arr
-        self.t_transit = t_transit
-        self.comp_1 = comp_1
-        self.comp_2 = comp_2
-        self.weighted_u_mean = None
-        self.weighted_v_mean = None
-        self.weighted_u_var = None
-        self.weighted_v_var = None
-        self.pair_components = None
-        self.scale = None
-        self.wtref = None
-        self.t_eq = None
-        self.magnitude = None
-        self.direction = None
-
-    def __repr__(self):
-        """ Return the x, y and z coordinate of the Timeseries object. """
-        return 'Timeseries(x={x}, y={y}, z={z})'.format(x=self.x,
-                                                        y=self.y,
-                                                        z=self.z)
-
-    def __eq__(self, other):
-        """ Two Timeseries objects are considered equal, if their x and y
-        coordinates are the same. """
-        return self.x == other.x and self.y == other.y
-
-    @classmethod
-    def from_file(cls,filename):
-        """ Create Timeseries object from file. """
-        with open(filename) as file:
-            for i, line in enumerate(file):
-                if i == 3:
-                    x = float(line.split(";")[0][:-3])
-                    y = float(line.split(";")[1][:-3])
-                    z = float(line.split(";")[-1][:-3])
-                    break
-
-        t_arr_1, t_transit_1, comp_1, t_arr_2, t_transit_2, comp_2 = \
-                                    np.genfromtxt(filename,
-                                                  usecols=(1,2,3,4,5,6),
-                                                  skip_header=6,unpack=True)
-
-        return cls(comp_1,comp_2,x,y,z,t_arr_1,t_transit_1,t_arr_2,t_transit_2)
-
-
-    def get_wtref(self,wtref_path,filename,index=0,vscale=1.):
-        """Reads wtref-file selected by the time series name 'filename' and
-        scales wtref with vscale. vscale is set to 1 as standard. index
-        accesses only the one wtref value that is associated to the current
-        file.
-        @parameter: path, type = string
-        @parameter: filename, type = string
-        @parameter: index, type = int
-        @parameter: vscale, type = float """
-
-        wtreffile = wtref_path + filename + '_wtref.txt'.format(filename.split('.')[0])
-        try:
-            all_wtrefs = np.genfromtxt(wtreffile,usecols=(3),skip_header=1)
-        except OSError:
-            print(' ATTENTION: wtref-file not found at ' + wtreffile + '!')
-
-        if np.size(all_wtrefs) == 1:
-            self.wtref = float(all_wtrefs) * vscale
-        else:
-            self.wtref = all_wtrefs[index] * vscale
-
-    def get_wind_comps(self,filename):
-        """ Get wind components from filename.
-        @parameter: filename, type = str """
-        with open(filename) as file:
-            for i, line in enumerate(file):
-                if i == 5:
-                    self.wind_comp1 = line.split()[-4][-1].lower()
-                    self.wind_comp2 = line.split()[-2][-1].lower()
-
-    def nondimensionalise(self):
-        """ Nondimensionalise the data. wtref is set to 1 if no wtref is
-        speciefied. """
-        if self.wtref is None:
-            self.wtref = 1
-            raise Warning('No value for wtref found. Run get_wtref(). wtref\
-            set to 1')
-
-        self.comp_1 = self.comp_1/self.wtref
-        self.comp_2 = self.comp_2/self.wtref
-
-    def adapt_scale(self,scale):
-        """ Convert timeseries from model scale to full scale.
-        @parameter: scale, type = float"""
-        self.scale = scale
-        self.x = self.x * self.scale/1000           #[m]
-        self.y = self.y * self.scale/1000           #[m]
-        self.z = self.z * self.scale/1000           #[m]
-        self.t_arr = self.t_arr * self.scale/1000   #[s]
-        
-    def pair_components(self,atol=1):
-        """ Pair components in comp_1 and comp_2 using atol as absolute
-        tolerance to match a pair of measurements. atol is set to 1 as default,
-        its unit is [ms].
-        @parameter: atol, type = float or int """
-
-        tmp_1 = self.comp_1[np.where(np.isclose(self.t_arr_1,self.t_arr_2,
-                                                atol))]
-        tmp_2 = self.comp_2[np.where(np.isclose(self.t_arr_1,self.t_arr_2,
-                                                atol))]
-
-        self.paired_components = np.transpose(np.vstack([tmp_1,tmp_2]))
-
-    def equidistant(self):
-        """ Create equidistant time series. """
-        self.t_eq = np.linspace(self.t_arr[0],self.t_arr[-1],len(self.t_arr))
-        self.comp_1 = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_1)
-        self.comp_2 = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_2)
-
-    def mask_outliers(self,std_mask=5.):
-        """ Mask outliers and print number of outliers. std_mask specifies the
-        threshold for a value to be considered an outlier. 5 is the default
-        value for std_mask.
-        @parameter: std_mask, type = float"""
-        u_size = np.size(self.comp_1)
-        v_size = np.size(self.comp_2)
-
-        # Mask outliers
-        u_mask = self.comp_1<(std_mask*np.std(self.comp_1)+np.mean(self.comp_1))
-        v_mask = self.comp_2<(std_mask*np.std(self.comp_2)+np.mean(self.comp_2))
-        mask = np.logical_and(u_mask, v_mask)
-
-        self.comp_1 = self.comp_1[mask]
-        self.comp_2 = self.comp_2[mask]
-
-        # Log outliers in console and to file
-        logger.info('Outliers component 1: {} or {:.4f}%'.format(
-            np.size(np.where(~u_mask)),
-            np.size(np.where(~u_mask))/u_size*100
-        ))
-        logger.info('Outliers component 2: {} or {:.4f}%'.format(
-            np.size(np.where(~v_mask)),
-            np.size(np.where(~v_mask))/v_size*100
-        ))
-
-    def calc_magnitude(self):
-        """ Calculate wind magnitude from components. """
-        if self.paired_components is None:
-            self.pair_components()
-            print('Pairing components before calculation!')
-            
-        self.magnitude = np.sqrt(self.paired_components[0]**2 +
-                                 self.paired_components[1]**2)
-
-    def calc_direction(self):
-        """ Calculate wind direction from components. """
-        if self.paired_components is None:
-            self.pair_components()
-            print('Pairing components before calculation!')
-            
-        unit_WD = np.arctan2(self.paired_components[1],
-                             self.paired_components[0]) * 180/np.pi
-        self.direction = (360 + unit_WD) % 360
-
-    @property
-    def weighted_component_mean(self):
-        """ Weigh the u and v component with its transit time through the
-        measurement volume. This is analoguous to the processing of the raw
-        data in the BSA software. Transit time weighting removes a possible
-        bias towards higher wind velocities. Returns the weighted u and v
-        component means."""
-        
-        self.weighted_u_mean = wt.transit_time_weighted_mean(
-                                                        self.t_transit,self.u)
-        self.weighted_v_mean = wt.transit_time_weighted_mean(
-                                                        self.t_transit,self.v)
-
-        return float(self.weighted_u_mean), float(self.weighted_v_mean)
-
-    @property
-    def weighted_component_variance(self):
-        """ Weigh the u and v component with its transit time through the
-        measurement volume. This is analoguous to the processing of the raw
-        data in the BSA software. Transit time weighting removes a possible
-        bias towards higher wind velocities. Returns the weighted u and v
-        component variance."""
-
-        self.weighted_u_var = wt.transit_time_weighted_var(
-                                                        self.t_transit,self.u)
-        self.weighted_v_var = wt.transit_time_weighted_var(
-                                                        self.t_transit,self.v)
-
-        return float(self.weighted_u_var), float(self.weighted_v_var)
-
-    @property
-    def mean_magnitude(self):
-        """ Calculate mean wind magnitude from unweighted components. """
-        if self.magnitude is None:
-            self.calc_magnitude()
-
-        return np.mean(self.magnitude)
-
-    @property
-    def mean_direction(self):
-        """ Calculate mean wind direction from components relative to the wind
-        tunnels axis."""
-        if self.paired_components is None:
-            self.pair_components()
-            print('Pairing components before calculation!')
-        
-        unit_WD = np.arctan2(np.mean(self.paired_components[0]),
-                             np.mean(self.paired_components[1]))*\
-                             180/np.pi
-        mean_direction = (360 + unit_WD) % 360
-
-        return mean_direction
-
-    def save2file(self,filename,out_dir=None):
-        """ Save data from Timeseries object to txt file. filename must include
-        '.txt' ending. If no out_dir directory is provided './' is set as
-        standard.
-        @parameter: filename, type = str
-        @parameter: out_dir, type = str"""
-        if out_dir is None:
-            out_dir = './'
-        if not os.path.exists(out_dir):
-            os.mkdir(out_dir)
-
-        output_file = out_dir + filename
-        np.savetxt(output_file,
-            np.vstack((self.comp_1,self.comp_2)).transpose(),
-            fmt='%.4f',\
-            header="General Timeseries data:"+'\n'+\
-            ""+'\n'+\
-            "geometric scale: 1:{}".format(float(self.scale))\
-            +""+'\n'+\
-            "Variables: x: {}, y: {}, z: {}, mean magnitude: {:.4f},"\
-            "weighted u_mean: {:.4f},weighted_v_mean: {:.4f},"\
-            "weighted u_variance: {:.4f},weighted_v_variance: {:.4f},"\
-            "mean direction: {:.4f}, wtref: {:.4f}".format(self.x,self.y,self.z,
-                                                   self.mean_magnitude,
-                                                   self.weighted_u_mean,
-                                                   self.weighted_v_mean,
-                                                   self.weighted_u_var,
-                                                   self.weighted_v_var,
-                                                   self.mean_direction,
-                                                   self.wtref)\
-            +""+'\n'+\
-            "flow components: {}, {}".format(self.wind_comp1,self.wind_comp2)\
-            )
-
-
+# %%#    
+    
 def plot_alpha_z0(alpha, z0, alpha_err, z0_err, ax=None, **kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
     @parameter: alpha, type = float or int
@@ -323,8 +52,314 @@ def get_ratio_referencedata():
     # ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
     # TODO: finish this with new ref data
 
+class PointConcentration():
+    """ PointConcentration is a class that holds data collected during 
+    a continuous release point concentration measurement. The class can hold 
+    the raw timeseries, the corresponding wtref and all other quantities 
+    necessary to analyse the timeseries. The raw timeseries can be processed by 
+    nondimensionalising it,  XXX adapting the scale, making it equidistant and 
+    masking outliers XXX . All the information in a Timeseries object can be 
+    saved to a txt file.
+    @parameter: time, type = np.array
+    @parameter: wtref, type = np.array
+    @parameter: fast_FID, type = np.array
+    @parameter: slow_FID, type = np.array
+    @parameter: open_rate, type = np.array"""
+    def __init__(self,time,wtref,slow_FID,fast_FID,open_rate):
+        """ Initialise PointConcentration object. """
+        self.x = None
+        self.y = None
+        self.z = None
+        self.scale = None
+        self.wtref_mean = None
+        self.slow_FID = slow_FID
+        self.fast_FID = fast_FID
+        self.open_rate = open_rate
+        self.time = time
+        self.wtref = wtref
+        self.standard_temp = 273.25 # [°K]
+        self.standard_pressure = 101325 # [Pa]
+        self.R=8.3144621 # universal gas constant [kJ/kgK]
+        self.full_scale_ref_length = 1 # [m]
+        self.full_scale_wtref = 6 # [m/s]
+        self.__check_sum = 0
+
+    def __repr__(self):
+        """ Return the x, y and z coordinate of the PointConcentration 
+        object. """
+        return 'PointConcentration (x={x}, y={y}, z={z})'.format(x=self.x,
+                                                                 y=self.y,
+                                                                 z=self.z)
+
+    def __eq__(self, other):
+        """ Two PointConcentration objects are considered equal, if their x, y
+        and z coordinates are the same. """
+        return self.x == other.x and self.y == other.y and self.z == other.z
+
+    @classmethod
+    def from_file(cls,filename):
+        """ Create PointConcentration object from file. open_rate is converted
+        to %."""
+        time, wtref, slow_FID, fast_FID, open_rate = np.genfromtxt(filename,
+                                                     usecols=(0,1,2,3,5),
+                                                     unpack=True)
+        
+        return cls(time,wtref,slow_FID, fast_FID,open_rate*10)
+
+    def to_full_scale(self):
+        """ Return all quantities to full scale. Requires XXXXXX to be 
+        specified."""
+        if self.__check_sum >= 6:
+            
+            quantities = ['x','y','z','time','concentration','flow rate']
+            your_measurement = {}
+            your_measurement.fromkeys(quantities)
+            
+            your_measurement['x'] = self.x = self.x*self.scale/1000 # [m]
+            your_measurement['y'] = self.y = self.y*self.scale/1000 # [m]
+            your_measurement['z'] = self.z = self.z*self.scale/1000 # [m]
+            your_measurement['flow rate'] = self.calc_full_scale_flow_rate()
+            
+            self.calc_full_scale_time()
+            self.calc_full_scale_concentration()
+            self.clear_zeros
+            
+            your_measurement['time'] = self.full_scale_time
+            
+            
+        
+            your_measurement['concentration'] =\
+                                        self.full_scale_concentration
+            
+            return (your_measurement)
+                            
+        else:
+            raise Exception('Please enter or calculate all data necessary!')
+
+    def ambient_conditions(self,x,y,z,pressure,temperature,mass_flow_rate):
+        """ Collect ambient conditions during measurement. pressure in [Pa],
+        temperature in [°C], mass flow rate in [kg/s]. """
+        self.__check_sum = self.__check_sum + 1
+        
+        self.x = x
+        self.y = y
+        self.z = z
+        self.pressure = pressure
+        self.temperature = temperature
+        self.mass_flow_rate = mass_flow_rate
+    
+    def scaling_information(self,scaling_factor,scale,ref_length,ref_height):
+        """ Collect data necessary to scale the results. unit: [m], where
+        applicable."""
+        self.__check_sum = self.__check_sum + 1
+        
+        self.scaling_factor = scaling_factor
+        self.scale = scale
+        self.ref_length = ref_length
+        self.ref_height =  ref_height
+        
+    def tracer_information(self,gas_name,mol_weight,density):
+        """ Collect information on tracer gas used during measurement.
+        Molecular weight in [kg/mol],   """
+        self.__check_sum = self.__check_sum + 1
+        
+        self.gas_name = gas_name
+        self.mol_weight = mol_weight
+        self.density = density
+        
+    def nondimensionalise(self):
+        """ Nondimensionalise all quantities using relevant reference data. """
+        pass
+    
+    def convert_temperature(self):
+        """ Convert ambient temperature to °K. """        
+        self.temperature = self.temperature + self.standard_temp
+            
+    def calc_full_scale_flow_rate(self):
+        """ Convert flow rate to full scale flow rate in [m^3/s]. """
+        if self.temperature is None:
+            PointConcentration.convert_temperature(self)
+        
+        self.full_scale_flow_rate = (self.mass_flow_rate*self.R*\
+                                     self.temperature)/\
+                                    (self.pressure*self.mol_weight)
+        
+        return self.full_scale_flow_rate
+    
+    def calc_net_concentration(self):
+        """ Calculate net concentration in [ppmV]. """
+        self.__check_sum = self.__check_sum + 1        
+        
+        self.net_concentration = self.fast_FID - self.slow_FID
+       
+        return self.net_concentration
+    
+    def calc_c_star(self):
+        """ Calculate dimensionless concentration. """
+        self.__check_sum = self.__check_sum + 1
+        
+        self.c_star = self.net_concentration*self.wtref*self.ref_length**2/\
+                      self.mass_flow_rate*1000*3600
+                      
+        return self.c_star
+    
+    def calc_full_scale_concentration(self):
+        """ Calculate full scale concentration in [ppmV]. """        
+        self.full_scale_concentration = self.c_star*\
+                                        self.full_scale_flow_rate/\
+                                       (self.full_scale_ref_length**2*\
+                                        self.full_scale_wtref)                                        
+        
+        return self.full_scale_concentration
+    
+    def calc_wtref_mean(self):
+        """ Calculate scaled wtref mean in [m/s]. """
+        self.__check_sum = self.__check_sum + 1
+        
+        self.wtref_mean = self.scaling_factor*np.mean(self.wtref)
+        
+        return self.wtref_mean
+    
+    def calc_full_scale_time(self):
+        """ Calculate full scale timesteps in [s]. """
+        if self.wtref_mean is None:
+            self.wtref_mean = PointConcentration.calc_wtref_mean()
+        
+        self.full_scale_time = self.full_scale_ref_length/self.ref_length*\
+                               self.wtref_mean/self.full_scale_wtref*\
+                               self.time
+                               
+        return self.full_scale_time
+
+    def clear_zeros(self):
+        """ Clear and count zeros in concentration measurements."""
+        # TODO, use logger
+        concentration_size = np.size(self.full_scale_concentration)
+
+        # Mask outliers
+        mask = self.full_scale_concentration < 0
+        
+        self.full_scale_concentration = self.full_scale_concentration[mask]
+        self.full_scale_time = self.full_scale_time[mask]
+
+        # Log outliers in console and to file
+        logger.info('Outliers component 1: {} or {:.4f}%'.format(
+            np.size(np.where(~mask)),
+            np.size(np.where(~mask))/concentration_size*100
+        ))
+        
+def plot_concentration_stats(data_dict):
+    """ Plot statistics of concentration measurements in boxplots. Expects
+    input from PointConcentration class.
+    @parameters: data, type = dict """
+    
+    namelist = list(data_dict.keys())
+    data = [np.nan for i in range(len(namelist))]
+    
+    for i,key in enumerate(namelist): 
+        data[i] = data_dict[key]['concentration']
+        
+    numDists = len(data)
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+    fig.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
+    
+    bp = ax1.boxplot(data, notch=0, sym='+', vert=1, whis=1.5)
+    plt.setp(bp['boxes'], color='black')
+    plt.setp(bp['whiskers'], color='black')
+    plt.setp(bp['fliers'], color='pink', marker='+')
+    
+    # Add a horizontal grid to the plot, but make it very light in color
+    # so we can use it for reading data values but not be distracting
+    ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey',
+                   alpha=0.5)
+    
+    # Hide these grid behind plot objects
+    ax1.set_axisbelow(True)
+    ax1.set_title('Your concentration measurements')
+    ax1.set_xlabel('Measurement')
+    ax1.set_ylabel('Concentration')
+    
+    # Now fill the boxes with desired colors
+    boxColors = ['darkkhaki', 'royalblue']
+    numBoxes = numDists
+    medians = list(range(numBoxes))
+    for i in range(numBoxes):
+        box = bp['boxes'][i]
+        boxX = []
+        boxY = []
+        for j in range(5):
+            boxX.append(box.get_xdata()[j])
+            boxY.append(box.get_ydata()[j])
+        boxCoords = np.column_stack([boxX, boxY])
+        # Alternate between Dark Khaki and Royal Blue
+        k = i % 2
+        boxPolygon =  patches.Polygon(boxCoords, facecolor=boxColors[k])
+        ax1.add_patch(boxPolygon)
+        # Now draw the median lines back over what we just filled in
+        med = bp['medians'][i]
+        medianX = []
+        medianY = []
+        for j in range(2):
+            medianX.append(med.get_xdata()[j])
+            medianY.append(med.get_ydata()[j])
+            ax1.plot(medianX, medianY, 'k')
+            medians[i] = medianY[0]
+        # Finally, overplot the sample averages, with horizontal alignment
+        # in the center of each box
+        ax1.plot([np.average(med.get_xdata())], [np.average(data[i])],
+                 color='w', marker='*', markeredgecolor='k')
+    
+    # Set the axes ranges and axes labels
+    ax1.set_xlim(0.5, numBoxes + 0.5)
+    top = 1200
+    bottom = -50
+    ax1.set_ylim(bottom, top)
+    ax1.set_xticklabels(np.repeat(namelist, 2),
+                        rotation=45, fontsize=8)
+    
+    # Due to the Y-axis scale being different across samples, it can be
+    # hard to compare differences in medians across the samples. Add upper
+    # X-axis tick labels with the sample medians to aid in comparison
+    # (just use two decimal places of precision)
+    pos = np.arange(numBoxes) + 1
+    upperLabels = [str(np.round(s, 2)) for s in medians]
+    weights = ['bold', 'semibold']
+    for tick, label in zip(range(numBoxes), ax1.get_xticklabels()):
+        k = tick % 2
+        ax1.text(pos[tick], top - (top*0.05), upperLabels[tick],
+                 horizontalalignment='center', size='medium', weight=weights[k],
+                 color=boxColors[k])
+
 # TODO: alpha/z0 ratio plot (optional)
 # TODO: documentation (sphinx)
+
+#%%#
+# Concentration stuff
+path = '//ewtl2/work/Benyamin/conti release/matlab concentration measurements/comparison_cont/input/'
+
+namelist = ['S2_P001_C_01','S2_P001_C_02','S2_P001_C_03']
+conc_ts = {}
+conc_ts.fromkeys(namelist)
+data_dict = {}
+data_dict.fromkeys(namelist)
+for name in namelist:
+    files = wt.get_files(path,name)
+    conc_ts[name] = {}
+    conc_ts[name].fromkeys(files)
+    for file in files:
+        conc_ts[name][file] = PointConcentration.from_file(path + file)
+        conc_ts[name][file].ambient_conditions(x=1560,y=220,z=6,pressure=100385,
+                                         temperature=22.5,mass_flow_rate=0.5)
+        conc_ts[name][file].scaling_information(scaling_factor=0.447,scale=225,
+                                          ref_length=1/350,ref_height=None)
+        conc_ts[name][file].tracer_information(gas_name=0.447,mol_weight=28.97/1000,
+                                         density=350)
+        conc_ts[name][file].calc_net_concentration()
+        conc_ts[name][file].calc_c_star()
+        conc_ts[name][file].calc_wtref_mean()
+        data_dict[name] = conc_ts[name][file].to_full_scale()
+
+plot_concentration_stats(data_dict)
 
 # %%#
 # This is an example script. It can be modified to your personal needs.
