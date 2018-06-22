@@ -125,8 +125,6 @@ class PointConcentration():
             self.clear_zeros
             
             your_measurement['time'] = self.full_scale_time
-            
-            
         
             your_measurement['concentration'] =\
                                         self.full_scale_concentration
@@ -236,7 +234,7 @@ class PointConcentration():
         # TODO, use logger
         concentration_size = np.size(self.full_scale_concentration)
 
-        # Mask outliers
+        # Mask zeros
         mask = self.full_scale_concentration < 0
         
         self.full_scale_concentration = self.full_scale_concentration[mask]
@@ -248,17 +246,25 @@ class PointConcentration():
             np.size(np.where(~mask))/concentration_size*100
         ))
         
-def plot_concentration_stats(data_dict):
+def plot_concentration_stats(data_dict,ylabel=None,**kwargs):
     """ Plot statistics of concentration measurements in boxplots. Expects
     input from PointConcentration class.
-    @parameters: data, type = dict """
-    
+    @parameters: data, type = dict
+    @parameters: ylabel, type = string
+    @parameter ax: axis passed to function
+    @parameter **kwargs : additional keyword arguments passed to plt.boxplot()
+    """    
+    # Set standard ylabel if none is specified
+    if ylabel is None:
+        ylabel = 'Concentration'
+        
+    # Generate namelist from dict keys
     namelist = list(data_dict.keys())
     data = [np.nan for i in range(len(namelist))]
     
     for i,key in enumerate(namelist): 
         data[i] = data_dict[key]['concentration']
-        
+    
     numDists = len(data)
     fig, ax1 = plt.subplots(figsize=(10, 6))
     fig.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
@@ -266,7 +272,7 @@ def plot_concentration_stats(data_dict):
     bp = ax1.boxplot(data, notch=0, sym='+', vert=1, whis=1.5)
     plt.setp(bp['boxes'], color='black')
     plt.setp(bp['whiskers'], color='black')
-    plt.setp(bp['fliers'], color='pink', marker='+')
+    plt.setp(bp['fliers'], color='red', marker='+')
     
     # Add a horizontal grid to the plot, but make it very light in color
     # so we can use it for reading data values but not be distracting
@@ -277,7 +283,7 @@ def plot_concentration_stats(data_dict):
     ax1.set_axisbelow(True)
     ax1.set_title('Your concentration measurements')
     ax1.set_xlabel('Measurement')
-    ax1.set_ylabel('Concentration')
+    ax1.set_ylabel(ylabel)
     
     # Now fill the boxes with desired colors
     boxColors = ['darkkhaki', 'royalblue']
@@ -314,8 +320,7 @@ def plot_concentration_stats(data_dict):
     top = 1200
     bottom = -50
     ax1.set_ylim(bottom, top)
-    ax1.set_xticklabels(np.repeat(namelist, 2),
-                        rotation=45, fontsize=8)
+    ax1.set_xticklabels(namelist,rotation=45, fontsize=8)
     
     # Due to the Y-axis scale being different across samples, it can be
     # hard to compare differences in medians across the samples. Add upper
@@ -327,7 +332,7 @@ def plot_concentration_stats(data_dict):
     for tick, label in zip(range(numBoxes), ax1.get_xticklabels()):
         k = tick % 2
         ax1.text(pos[tick], top - (top*0.05), upperLabels[tick],
-                 horizontalalignment='center', size='medium', weight=weights[k],
+                 horizontalalignment='center',size='medium',weight=weights[k],
                  color=boxColors[k])
 
 # TODO: alpha/z0 ratio plot (optional)
@@ -359,7 +364,22 @@ for name in namelist:
         conc_ts[name][file].calc_wtref_mean()
         data_dict[name] = conc_ts[name][file].to_full_scale()
 
-plot_concentration_stats(data_dict)
+#plot_concentration_stats(data_dict)
+
+# Generate namelist from dict keys
+namelist = list(data_dict.keys())
+
+percentile_dict = {}
+percentile_dict.fromkeys(namelist)
+
+percentile_list = [5,95,99]
+
+for name in namelist: 
+    percentile_dict[name] = {}
+    for percentile in percentile_list:
+        percentile_dict[name][percentile] = np.percentile(
+                                            data_dict[name]['concentration'],
+                                            percentile)
 
 # %%#
 # This is an example script. It can be modified to your personal needs.
