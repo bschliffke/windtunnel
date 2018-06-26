@@ -15,9 +15,9 @@ logger = logging.getLogger()
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
-path = 'path_to_your_timeseries'
+path = ''
 wtref_path = 'path_to_your_wtref'
-ref_path = 'path_to_reference_data'
+#ref_path = 'path_to_reference_data'
 plot_path = './plots/'
 txt_path = './postprocessed/'
 file_type = 'pdf'
@@ -258,9 +258,13 @@ for name in namelist:
     heights = []
     mean_mag = []
     u_mean = []
+    u_mean_wght = []
     u_std = []
+    u_std_wght = []
     v_mean = []
+    v_mean_wght = []
     v_std = []
+    v_std_wght = []
     I_u = []
     I_v = []
     fluxes = []
@@ -275,9 +279,13 @@ for name in namelist:
         heights.append((time_series[name][file].z))
         mean_mag.append(time_series[name][file].mean_magnitude)
         u_mean.append(np.mean(time_series[name][file].u))
+        u_mean_wght.append(time_series[name][file].weighted_component_mean[0])
         u_std.append(np.std(time_series[name][file].u))
+        u_std_wght.append(np.sqrt(time_series[name][file].weighted_component_variance[0]))
         v_mean.append(np.mean(time_series[name][file].v))
+        v_mean_wght.append(time_series[name][file].weighted_component_mean[1])
         v_std.append(np.std(time_series[name][file].v))
+        v_std_wght.append(np.sqrt(time_series[name][file].weighted_component_variance[1]))
         wdir.append(time_series[name][file].mean_direction)
         wtref.append(time_series[name][file].wtref)
         
@@ -286,22 +294,29 @@ for name in namelist:
 
         fluxes.append(turb_data[name][file][2])
         lux.append(lux_data[name][file])
-        
+
     if mode == 4:
         # Perform and plot results of Reynolds Number Independence test, no
         # output saved as txt, as programme ends at "break"
-        wt.plots.plot_Re_independence(mean_mag,wtref)
+        wt.plots.plot_Re_independence(mean_mag, wtref)
         break
-    
-    # Save quantities for vertical and lateral profiles    
+
+   # Save quantities for vertical and lateral profiles    
     np.savetxt(txt_path + name + '_turb.txt',
-               np.vstack((x,y,heights,mean_mag,u_mean,v_mean,u_std,v_std,I_u,
-                          I_v,lux,fluxes,wdir,wtref)).transpose(),
-               fmt='%.8f',header="flow and turbulence parameters"+'\n'+\
-               "units: dimensionless!"+'\n'+\
-               "format: standard numpy.genfromtxt()"+'\n'+\
-               "variables = \"x\" \"y\" \"z\" \"M\" \"{0}_mean\" \"{1}_mean\" \"{0}_std\" \"{1}_std\" \"I_{0}\" \"I_{1}\" \"L{0}x\" \"{0}'{1}'_flux\" \"wdir\" \"wtref\"".format(wind_comps[name][file][0], wind_comps[name][file][1]))
-    
+               np.vstack((x, y, heights, mean_mag, u_mean, u_mean_wght, v_mean,
+                          v_mean_wght, u_std, u_std_wght, v_std, v_std_wght,
+                          I_u, I_v, lux, fluxes, wdir, wtref)).transpose(),
+               fmt='%.8f', header=('flow and turbulence parameters\n'
+                                   'units: dimensionless!\n'
+                                   'format: standard numpy.genfromtxt()\n'
+                                   'variables = \"x\" \"y\" \"z\" \"M\" '
+                                   '\"{0}_mean\" \"{0}_mean_wght\" '
+                                   '\"{1}_mean\" \"{1}_mean_wght\" \"{0}_std\"'
+                                   ' \"{0}_std_wght\" \"{1}_std\" '
+                                   '\"{1}_std_wght\" \"I_{0}\" \"I_{1}\" '
+                                   '\"L{0}x\" \"{0}\'{1}\'_flux\" \"wdir\" '
+                                   '\"wtref\"'.format(wind_comps[name][file][0],
+                                                      wind_comps[name][file][1])))  
     if mode == 1:
         # Plot results of a vertical profile
         # Wind components

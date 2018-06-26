@@ -227,9 +227,9 @@ class Timeseries():
             ""+'\n'+\
             "geometric scale: 1:{}".format(float(self.scale))\
             +""+'\n'+\
-            "Variables: x: {}, y: {}, z: {}, mean magnitude: {:.4f},"\
-            "weighted u_mean: {:.4f},weighted_v_mean: {:.4f},"\
-            "weighted u_variance: {:.4f},weighted_v_variance: {:.4f},"\
+            "Variables: x: {}, y: {}, z: {}, mean magnitude: {:.4f}, "\
+            "weighted u_mean: {:.4f}, weighted_v_mean: {:.4f}, "\
+            "weighted u_variance: {:.4f}, weighted_v_variance: {:.4f}, "\
             "mean direction: {:.4f}, wtref: {:.4f}".format(self.x,self.y,self.z,
                                                    self.mean_magnitude,
                                                    self.weighted_u_mean,
