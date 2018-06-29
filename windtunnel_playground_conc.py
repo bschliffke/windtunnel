@@ -36,11 +36,10 @@ class PointConcentration():
         self.open_rate = open_rate
         self.time = time
         self.wtref = wtref
-        self.standard_temp = 273.25 # [°K]
+        self.standard_temp = 20 # [°C]
+        self.Kelvin_temp = 273.15 # [°C]
         self.standard_pressure = 101325 # [Pa]
         self.R=8.3144621 # universal gas constant [kJ/kgK]
-        self.full_scale_ref_length = 1 # [m]
-        self.full_scale_wtref = 6 # [m/s]
         self.__check_sum = 0
 
     def __repr__(self):
@@ -68,7 +67,7 @@ class PointConcentration():
     def to_full_scale(self):
         """ Return all quantities to full scale. Requires XXXXXX to be 
         specified."""
-        if self.__check_sum >= 6:
+        if self.__check_sum >= 8:
             
             quantities = ['x','y','z','time','concentration','flow rate']
             your_measurement = {}
@@ -93,9 +92,10 @@ class PointConcentration():
         else:
             raise Exception('Please enter or calculate all data necessary!')
 
-    def ambient_conditions(self,x,y,z,pressure,temperature,mass_flow_rate):
+    def ambient_conditions(self,x,y,z,pressure,temperature,calibration_curve,
+                           mass_flow_controller, calibration_factor = 0):
         """ Collect ambient conditions during measurement. pressure in [Pa],
-        temperature in [°C], mass flow rate in [kg/s]. """
+        temperature in [°C]. """
         self.__check_sum = self.__check_sum + 1
         
         self.x = x
@@ -103,7 +103,9 @@ class PointConcentration():
         self.z = z
         self.pressure = pressure
         self.temperature = temperature
-        self.mass_flow_rate = mass_flow_rate
+        self.calibration_curve = calibration_curve
+        self.calibration_factor = calibration_factor
+        self.mass_flow_controller = mass_flow_controller
     
     def scaling_information(self,scaling_factor,scale,ref_length,ref_height):
         """ Collect data necessary to scale the results. unit: [m], where
@@ -113,9 +115,10 @@ class PointConcentration():
         self.scaling_factor = scaling_factor
         self.scale = scale
         self.ref_length = ref_length
-        self.ref_height =  ref_height
+        self.ref_height = ref_height
+        self.full_scale_ref_length = self.scale*self.ref_length
         
-    def tracer_information(self,gas_name,mol_weight,density):
+    def tracer_information(self,gas_name,mol_weight,density,gas_factor):
         """ Collect information on tracer gas used during measurement.
         Molecular weight in [kg/mol],   """
         self.__check_sum = self.__check_sum + 1
@@ -123,23 +126,40 @@ class PointConcentration():
         self.gas_name = gas_name
         self.mol_weight = mol_weight
         self.density = density
+        self.gas_factor = gas_factor
         
-    def nondimensionalise(self):
-        """ Nondimensionalise all quantities using relevant reference data. """
-        pass
-    
+    def full_scale_information(self,full_scale_wtref,full_scale_flow_rate):
+        """ Collect information on desired full scale information.
+        full_scale_wtref in [m/s]
+        full_scale_flow_rate is automatically adjusted to standard atmosphere
+        conditions. input in [kg/s], output in [m^3/s]"""
+        self.__check_sum = self.__check_sum + 1
+        
+        self.full_scale_wtref = full_scale_wtref
+        self.full_scale_flow_rate = full_scale_flow_rate
+        
     def convert_temperature(self):
         """ Convert ambient temperature to °K. """        
-        self.temperature = self.temperature + self.standard_temp
-            
-    def calc_full_scale_flow_rate(self):
-        """ Convert flow rate to full scale flow rate in [m^3/s]. """
-        if self.temperature is None:
-            PointConcentration.convert_temperature(self)
+        self.temperature_K = self.temperature + self.Kelvin_temp
+        self.standard_temp_K = self.standard_temp + self.Kelvin_temp
         
-        self.full_scale_flow_rate = (self.mass_flow_rate*self.R*\
-                                     self.temperature)/\
-                                    (self.pressure*self.mol_weight)
+    def calc_model_mass_flow_rate(self):
+        """ Calculate the model scale flow rate in [kg/s]. """
+        self.__check_sum = self.__check_sum + 1
+        
+        self.mass_flow_rate = self.gas_factor*(np.mean(self.open_rate)*\
+                                               self.calibration_curve + \
+                                               self.calibration_factor)*\
+                                   self.temperature_K*self.standard_pressure/\
+                                   (self.pressure*self.standard_temp_K)
+                                   
+        return self.mass_flow_rate
+
+    def calc_full_scale_flow_rate(self):
+        """ Convert flow rate to full scale flow rate in [m^3/s]. """ 
+        self.full_scale_flow_rate = (self.full_scale_flow_rate*self.R*\
+                                     self.standard_temp_K)/\
+                                    (self.standard_pressure*self.mol_weight)
         
         return self.full_scale_flow_rate
     
@@ -152,11 +172,11 @@ class PointConcentration():
         return self.net_concentration
     
     def calc_c_star(self):
-        """ Calculate dimensionless concentration. """
+        """ Calculate dimensionless concentration. [-] """
         self.__check_sum = self.__check_sum + 1
-        
-        self.c_star = self.net_concentration*self.wtref*self.ref_length**2/\
-                      self.mass_flow_rate*1000*3600
+        # TODO: calc_mass_flow_rate (for Point, Line and Area)
+        self.c_star = self.net_concentration*self.wtref_mean*\
+                      self.ref_length**2/self.mass_flow_rate*1000*3600
                       
         return self.c_star
     
@@ -227,20 +247,28 @@ class PointConcentration():
             "geometric scale: 1:{}".format(float(self.scale))\
             +""+'\n'+\
             "Variables: x: {}, y: {}, z: {}, ambient temperature: {:.1f}, "\
-            "ambient pressure: {:.2f}, mass flow rate: {:.4f}, "\
-            "Tracer gas: {}, mol. weight tracer: {:.4f}, "\
-            "tracer density: {:.4f}, wtref: {:.4f}, "\
-            "full scale flow rate: {:.4f}".format(self.x,self.y,self.z,
+            "ambient pressure: {:.2f}, mass flow rate {:.4f}, "\
+            "reference length (model): {:.4f}, "\
+            "reference length (full-scale): {:.4f}, Tracer gas: {}, "\
+            "mol. weight tracer: {:.4f}, tracer density: {:.4f}, "\
+            "gas factor: {:.6f}, calibartion curve: {:.6f}, "\
+            "wtref: {:.4f}, full scale flow rate: {:.4f}".format(self.x,self.y,
+                                                  self.z,
                                                   self.temperature,
                                                   self.pressure,
                                                   self.mass_flow_rate,
+                                                  self.ref_length,
+                                                  self.full_scale_ref_length,
                                                   self.gas_name,
                                                   self.mol_weight,
                                                   self.density,
+                                                  self.gas_factor,
+                                                  self.calibration_curve,
                                                   self.wtref_mean,
                                                   self.full_scale_flow_rate)\
             +""+'\n'+\
-            "time c_star net_concentration full_scale_concentration")
+            "\"time\" \"c_star\" \"net_concentration\" "\
+            "\"full_scale_concentration\"")
 
         
 def plot_boxplots(data_dict,ylabel=None,**kwargs):
@@ -316,10 +344,8 @@ def plot_boxplots(data_dict,ylabel=None,**kwargs):
     # Set the axes ranges and axes labels
     ax1.set_xlim(0.5, numBoxes + 0.5)
     top = np.max(maxes)+0.1*np.max(maxes)
-    if np.max(maxes) > 400: 
-        bottom = -50
-    else:
-        bottom = -5
+    #if np.max(maxes) > 400: 
+    bottom = -10
     ax1.set_ylim(bottom, top)
     ax1.set_xticklabels(namelist,rotation=45, fontsize=8)
     
@@ -381,16 +407,25 @@ for name in namelist:
     conc_ts[name].fromkeys(files)
     for file in files:
         conc_ts[name][file] = PointConcentration.from_file(path + file)
-        conc_ts[name][file].ambient_conditions(x=1560,y=220,z=6,pressure=100385,
-                                         temperature=22.5,mass_flow_rate=0.5)
+        conc_ts[name][file].ambient_conditions(x=1560,y=220,z=6,
+                                               pressure=100385,
+                                               temperature=22.5,
+                                               calibration_curve=2.94,
+                                               mass_flow_controller='X',
+                                               calibration_factor=1.0035)
         conc_ts[name][file].scaling_information(scaling_factor=0.447,scale=225,
-                                          ref_length=1/350,ref_height=None)
+                                              ref_length=1/225,ref_height=None)
         conc_ts[name][file].tracer_information(gas_name='C12',
                                                mol_weight=28.97/1000,
-                                               density=1.1)
+                                               density=1.1,
+                                               gas_factor=0.5)
+        conc_ts[name][file].full_scale_information(full_scale_wtref=6,
+                                                   full_scale_flow_rate=0.5)
+        conc_ts[name][file].convert_temperature()
+        conc_ts[name][file].calc_wtref_mean()
+        conc_ts[name][file].calc_model_mass_flow_rate()
         conc_ts[name][file].calc_net_concentration()
         conc_ts[name][file].calc_c_star()
-        conc_ts[name][file].calc_wtref_mean()
         data_dict[name] = conc_ts[name][file].to_full_scale()
         conc_ts[name][file].save2file(file)
         

@@ -45,12 +45,12 @@ for name in namelist:
         ts = wt.Timeseries.from_file(path+file)
         ts.get_wind_comps(path+file)
         ts.get_wtref(wtref_path,name,index=i)
-        ts.nondimensionalise()
-        ts.weighted_component_mean
-        ts.weighted_component_variance
         ts.adapt_scale(scale)
         ts.equidistant()
         ts.mask_outliers()
+        ts.weighted_component_mean
+        ts.weighted_component_variance
+        ts.nondimensionalise()
         ts.mean_magnitude
         ts.mean_direction
         ts.save2file(file)

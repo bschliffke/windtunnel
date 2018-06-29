@@ -503,7 +503,7 @@ def plot_spectra(f_sm, S_uu_sm, S_vv_sm, S_uv_sm, u_aliasing, v_aliasing,
                         facecolor=(0.6,0.6,1.),edgecolor='none',alpha=0.2,
                         label=r'reference range $ww$')
 
-    ax.set_xlim(xsmin,xsmax)
+    #ax.set_xlim(xsmin,xsmax)
     ax.set_ylim([10**-6,10])
     ax.set_xlabel(r"$f\cdot z\cdot U^{-1}$")
     ax.set_ylabel(r"$f\cdot S_{ij}\cdot (\sigma_i\sigma_j)^{-1}$")

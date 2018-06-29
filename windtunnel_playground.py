@@ -70,6 +70,10 @@ scale = 500
 # 4 = Reynolds Number Independence
 mode = 1
 
+# Check if all necessary output directories exist
+wt.check_directory(plot_path)
+wt.check_directory(txt_path)
+
 time_series = {}
 time_series.fromkeys(namelist)
 
@@ -82,14 +86,14 @@ for name in namelist:
         ts = wt.Timeseries.from_file(path + file)
         ts.get_wind_comps(path + file)
         ts.get_wtref(wtref_path, name, index=i)
-        ts.nondimensionalise()
         ts.adapt_scale(scale)
         ts.equidistant()
         ts.mask_outliers()
-        ts.mean_magnitude
-        ts.mean_direction
         ts.weighted_component_mean
         ts.weighted_component_variance
+        ts.nondimensionalise()
+        ts.mean_magnitude
+        ts.mean_direction
         ts.save2file(file)
         time_series[name][file] = ts
 
@@ -241,8 +245,8 @@ for name in namelist:
         turb_data[name][file] = wt.calc_turb_data(time_series[name][file].u,
                                                   time_series[name][file].v)
         lux_data[name][file] = wt.calc_lux_data(dt,
-                                                (time_series[name][file].u *
-                                                 time_series[name][file].wtref))
+                                               (time_series[name][file].u *
+                                                time_series[name][file].wtref))
 
         if mode == 1:
             # Plot scatter plot of raw data
@@ -254,10 +258,10 @@ for name in namelist:
             # Plot histograms of each component
             plt.figure(files.index(file) + 200)
             wt.plots.plot_hist(time_series[name][file].u)
-            plt.savefig(plot_path + 'hist_u_' + file[:-4] + '.' + file_type)
+            #plt.savefig(plot_path + 'hist_u_' + file[:-4] + '.' + file_type)
             plt.figure(files.index(file) + 300)
             wt.plots.plot_hist(time_series[name][file].v)
-            plt.savefig(plot_path + 'hist_v_' + file[:-4] + '.' + file_type)
+            #plt.savefig(plot_path + 'hist_v_' + file[:-4] + '.' + file_type)
             spectra_data[name][file] = wt.calc_spectra(
                 time_series[name][file].u,
                 time_series[name][file].v,
@@ -290,7 +294,7 @@ for name in namelist:
                                   time_series[name][file].z)#,
                                   #ref_path=ref_path)
             plt.tight_layout()
-            plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
+            #plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
 
     # Initiate lists for all quantitites
     x = []
