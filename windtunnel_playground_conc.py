@@ -62,7 +62,7 @@ class PointConcentration():
                                                      usecols=(0,1,2,3,5),
                                                      unpack=True)
         
-        return cls(time,wtref,slow_FID, fast_FID,open_rate*10)
+        return cls(time,wtref,slow_FID,fast_FID,open_rate*10)
 
     def to_full_scale(self):
         """ Return all quantities to full scale. Requires XXXXXX to be 

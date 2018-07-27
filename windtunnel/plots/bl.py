@@ -572,9 +572,11 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None):
     xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
     ax.set(xticks=np.arange(0,len(data.keys())+1),
               xticklabels=xticklabels,
-              xlim=(-0.5, len(data.keys())-0.5))
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$')
+              xlim=(-0.5, len(data.keys())-0.5),)
+    ax.tick_params(labelsize=12)
+    ax.set_ylabel(ylabel, fontsize=18)
+    ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$',
+                  fontsize=18)
     
     return handles
     

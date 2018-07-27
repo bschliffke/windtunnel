@@ -56,19 +56,19 @@ def get_ratio_referencedata():
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
-path = '//ewtl2/projects/Hafencity/coincidence/time series/'
+path = '//ewtl2/projects/Hafencity/coincidence/time series/Boundarylayer/'
 wtref_path = '//ewtl2/projects/Hafencity/wtref/'
 plot_path = './plots/'
 txt_path = './postprocessed/'
 #ref_path = '/home/benny/Downloads/data/ref_data/'
-file_type = 'pdf'
-namelist = ['HC_BL_UW_130']#['HC_BL_UW_139']  # ['HC_KM_010']['HC_RZU_UV_011']['HC_LAH_UV_015']
+file_type = 'png'
+namelist = ['HC_KM_014']#['HC_BL_UW_139']  # ['HC_KM_010']['HC_RZU_UV_011']['HC_LAH_UV_015']
 scale = 500
 # 1 = vertical profile
 # 2 = lateral profile
 # 3 = convergence test
 # 4 = Reynolds Number Independence
-mode = 1
+mode = 3
 
 # Check if all necessary output directories exist
 wt.check_directory(plot_path)
@@ -235,7 +235,8 @@ for name in namelist:
                                       wtref=time_series[name][file].wtref,
                                       ref_length=ref_length, scale=scale)
             plt.tight_layout()
-            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type)
+            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type,
+                        dpi=1000,bbox_inches='tight')
             quit()
 
         # Calculate mean wind quantities
