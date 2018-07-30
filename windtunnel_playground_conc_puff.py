@@ -27,6 +27,8 @@ class PuffConcentration():
         self.wtref_mean = None
         self.begin_release_period = None
         self.end_release_period = None
+        self.begin_release_index = None
+        self.end_release_index = None
         self.release_length = None
         self.dosage = None
         self.slow_FID = slow_FID
@@ -83,25 +85,43 @@ class PuffConcentration():
        
         return self.net_concentration
 
+    def detect_end_release_index(self):
+        """ Detects the indices of the end of each release period. Returns a
+        list containing the index of the last timestamp of each release 
+        period. """
+        self.end_release_index = []
+        for i,value in enumerate(self.signal):
+            if value != 0 and self.signal[i+1] == 0:
+                self.end_release_index.append(i)
+                
+        return self.end_release_index
+    
     def detect_end_release_period(self):
         """ Detects the end of each release period. Returns an np.array 
         containing the last timestamp of each release period. """
-        self.end_release_period = []
-        for i,value in enumerate(self.signal):
-            if value != 0 and self.signal[i+1] == 0:
-                self.end_release_period.append(self.time[i])
+        indices = self.detect_end_release_index()
+        self.end_release_period = self.time[indices]
                 
-        return np.asarray(self.end_release_period)
+        return self.end_release_period
+    
+    def detect_begin_release_index(self):
+        """ Detects the indices of the end of each release period. Returns a
+        list containing the index of the last timestamp of each release 
+        period. """
+        self.begin_release_index = []
+        for i in range(np.size(self.signal)-2):
+                if self.signal[i] == 0 and self.signal[i+1] != 0:
+                    self.begin_release_index.append(i)
+                
+        return self.begin_release_index
     
     def detect_begin_release_period(self):
         """ Detects the beginning of each release period. Returns an np.array 
         containing the first timestamp of each release period. """
-        self.begin_release_period = []
-        for i in range(np.size(self.signal)-2):
-                if self.signal[i] == 0 and self.signal[i+1] != 0:
-                    self.begin_release_period.append(self.time[i+1])
-                
-        return np.asarray(self.begin_release_period)
+        indices = self.detect_begin_release_index()
+        self.begin_release_period = self.time[indices]
+        
+        return self.begin_release_period
        
     def calc_release_length(self):
         """ Calculate the length of each release period. Returns an np.array
@@ -113,7 +133,7 @@ class PuffConcentration():
         for begin,end in zip(beginning,end):
             self.release_length.append(end - begin)
             
-        return np.asarray(self.release_length)
+        return self.release_length
     
     def get_dosage(self):
         """ Calculates the dosage of each puff between two release times. """
@@ -131,41 +151,105 @@ class PuffConcentration():
                 break
             
         return self.dosage
-        
+
     def detect_leaving_time(self):
-        """ Detects the leaving time of each puff. Returns an np.array 
+        """ Detects the end of each puff. Returns an np.array 
         containing the last timestamp of each puff. """
-        self.end_release_period = []
-        for i,value in enumerate(self.signal):
-            if value != 0 and self.signal[i+1] == 0:
-                self.end_release_period.append(self.time[i])
-                
-        return np.asarray(self.end_release_period)
+        self.leaving_time = []
+
+        for begin,value in zip(self.begin_release_index,self.dosage):
+            index = begin
+            end = begin + 1
+            dose = 0
+            while dose < 0.95*value:
+                  dose = np.sum(self.net_concentration[begin:end])
+                  end += 1
+                  index += 1
+            self.leaving_time.append(self.time[index]-self.time[begin])
+            
+        return self.leaving_time
     
     def detect_arrival_time(self):
         """ Detects the beginning of each puff. Returns an np.array 
         containing the first timestamp of each puff. """
         self.arrival_time = []
-        
-        dose = 0
-        begin = 0
-        end = 1
-        for i,value in enumerate(self.dosage):
-            while dose < 0.05*value:
-                dose = np.sum(self.net_concentration[begin:end])
-                end = end + 1
-            if dose >= 0.05*value:
-                begin = end + 1
-                self.arrival_time.append(self.time[np.where(
-                                                   self.net_concentration ==\
-                                                   dose)])
-                continue
-            
-        return np.asarray(self.arrival_time)
 
+        for begin,value in zip(self.begin_release_index,self.dosage):
+            index = begin
+            end = begin + 1
+            dose = 0
+            while dose < 0.05*value:
+                  dose = np.sum(self.net_concentration[begin:end])
+                  end += 1
+                  index += 1
+            self.arrival_time.append(self.time[index]-self.time[begin])
+            
+        return self.arrival_time
+    
+    def get_residence_time(self):
+        """ Calculate the residence time of each puff. Returns an np.array. """
+        self.residence_time = np.array([])
+        self.residence_time = np.asarray(self.leaving_time) -\
+                              np.asarray(self.arrival_time)
+        
+        return self.residence_time
+
+    def get_peak_concentration(self):
+        """ Acquire peak concentration of each puff. Returns a list. """
+        self.peak_concentration = []
+        
+        for i,begin in enumerate(self.begin_release_index):
+            if i == np.size(self.begin_release_index)-1:
+                end = -1
+            else:
+                end = self.begin_release_index[i+1]
+                
+            self.peak_concentration.append(
+                                    np.max(self.net_concentration[begin:end]))
+
+        return self.peak_concentration
+
+    def get_peak_time(self):
+        """ Acquire peak time of each puff. Returns a list. """
+        self.peak_time = []
+        
+        for i,begin in enumerate(self.begin_release_index):
+            if i == np.size(self.begin_release_index)-1:
+                end = -1
+            else:
+                end = self.begin_release_index[i+1]
+                
+            time = self.time[begin:end]
+            self.peak_time.append(float(time[np.where(
+                                  self.net_concentration[begin:end] == \
+                                  np.max(self.net_concentration[begin:end]
+                                  ))] - self.time[begin]))
+
+        return self.peak_time
+
+    def get_ascent_time(self):
+        """ Calculate the ascent time between arrrival time and peak time. 
+        Returns an np.array. """
+        self.ascent_time = np.array([])
+        
+        self.ascent_time = np.asarray(self.peak_time) - \
+                           np.asarray(self.arrival_time)
+        
+        return self.ascent_time
+
+    def get_descent_time(self):
+        """ Calculate the ascent time between arrrival time and peak time. 
+        Returns an np.array. """
+        self.descent_time = np.array([])
+        
+        self.descent_time = np.asarray(self.leaving_time) - \
+                            np.asarray(self.peak_time)
+        
+        return self.descent_time
+        
     @property
     def max_puffs(self):
-        """ Get maximum number of puffs. Ddeduced from the length of 
+        """ Get maximum number of puffs. Deduced from the length of 
         release_length. """ 
         
         return np.size(self.release_length)
@@ -191,11 +275,17 @@ for name in namelist:
         conc_ts[name][file].calc_release_length()
         conc_ts[name][file].get_dosage()
         conc_ts[name][file].detect_arrival_time()
+        conc_ts[name][file].detect_leaving_time()
+        conc_ts[name][file].get_residence_time()
+        conc_ts[name][file].get_peak_concentration()
+        conc_ts[name][file].get_peak_time()
+        conc_ts[name][file].get_ascent_time()
+        conc_ts[name][file].get_descent_time()
 
 plt.figure(0)    
 plt.plot(np.arange(np.size(conc_ts[name][file].signal[:6000])),
                            conc_ts[name][file].signal[:6000])
 
 plt.figure(1)
-plt.plot(np.arange(np.size(conc_ts[name][file].signal[:6000])),
-                           conc_ts[name][file].net_concentration[:6000])
+plt.plot(conc_ts[name][file].time[-10000:],
+         conc_ts[name][file].net_concentration[-10000:])
