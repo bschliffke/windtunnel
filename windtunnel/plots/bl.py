@@ -544,7 +544,8 @@ def plot_Re_independence(data,wtref,yerr=0,ax=None,**kwargs):
     return ret
 
 
-def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None):
+def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None,
+                          **kwargs):
     """Plots results of convergence tests  from data. This is a very limited 
     function and is only intended to give a brief overview of the convergence
     rest results using dictionaries as input objects. wtref, ref_length and 
@@ -571,8 +572,9 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None):
     xticklabels=[key for key in data.keys()]
     xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
     ax.set(xticks=np.arange(0,len(data.keys())+1),
-              xticklabels=xticklabels,
-              xlim=(-0.5, len(data.keys())-0.5),)
+                  xticklabels=xticklabels,
+                  xlim=(-0.5, len(data.keys())-0.5))
+    ax.locator_params(axis='x', nbins=10)
     ax.tick_params(labelsize=12)
     ax.set_ylabel(ylabel, fontsize=18)
     ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$',

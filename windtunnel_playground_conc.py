@@ -224,10 +224,10 @@ class PointConcentration():
             np.size(np.where(~mask))/concentration_size*100
         ))
         
-    def save2file(self,filename,out_dir=None):
-        """ Save data from PointConcentration object to txt file. filename must
-        include '.txt' ending. If no out_dir directory is provided './' is set 
-        as standard.
+    def save2file_ms(self,filename,out_dir=None):
+        """ Save model scale data from PointConcentration object to txt file.
+        filename must include '.txt' ending. If no out_dir directory is
+        provided './' is set as standard.
         @parameter: filename, type = str
         @parameter: out_dir, type = str"""
         if out_dir is None:
@@ -237,6 +237,48 @@ class PointConcentration():
 
         output_file = out_dir + filename
         np.savetxt(output_file,np.vstack((self.time,
+                                          self.c_star,
+                                          self.net_concentration)
+                                          ).transpose(),
+            fmt='%.4f',\
+            header="General concentration measurement data:"+'\n'+\
+            ""+'\n'+\
+            "geometric scale: 1:{}".format(float(self.scale))\
+            +""+'\n'+\
+            "Variables: x: {}, y: {}, z: {}, ambient temperature: {:.1f}, "\
+            "ambient pressure: {:.2f}, mass flow rate {:.4f}, "\
+            "reference length (model): {:.4f}, "\
+            "reference length (full-scale): {:.4f}, Tracer gas: {}, "\
+            "mol. weight tracer: {:.4f}, tracer density: {:.4f}, "\
+            "gas factor: {:.6f}, calibartion curve: {:.6f}, "\
+            "wtref: {:.4f}, full scale flow rate: {:.4f}".format(self.x,self.y,
+                                                  self.z,
+                                                  self.temperature,
+                                                  self.pressure,
+                                                  self.mass_flow_rate,
+                                                  self.ref_length,
+                                                  self.gas_name,
+                                                  self.mol_weight,
+                                                  self.density,
+                                                  self.gas_factor,
+                                                  self.calibration_curve,
+                                                  self.wtref_mean)\
+            +""+'\n'+\
+            "\"time\" \"c_star\" \"net_concentration\" ")
+
+    def save2file_fs(self,filename,out_dir=None):
+        """ Save full scale and model scale data from PointConcentration object
+        to txt file. filename must include '.txt' ending. If no out_dir 
+        directory is provided './' is set as standard.
+        @parameter: filename, type = str
+        @parameter: out_dir, type = str"""
+        if out_dir is None:
+            out_dir = './'
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
+
+        output_file = out_dir + filename
+        np.savetxt(output_file,np.vstack((self.full_scale_time,
                                           self.c_star,
                                           self.net_concentration,
                                           self.full_scale_concentration)
@@ -267,9 +309,8 @@ class PointConcentration():
                                                   self.wtref_mean,
                                                   self.full_scale_flow_rate)\
             +""+'\n'+\
-            "\"time\" \"c_star\" \"net_concentration\" "\
+            "\"full scale time\" \"c_star\" \"net_concentration\" "\
             "\"full_scale_concentration\"")
-
         
 def plot_boxplots(data_dict,ylabel=None,**kwargs):
     """ Plot statistics of concentration measurements in boxplots. Expects
@@ -427,7 +468,7 @@ for name in namelist:
         conc_ts[name][file].calc_net_concentration()
         conc_ts[name][file].calc_c_star()
         data_dict[name] = conc_ts[name][file].to_full_scale()
-        conc_ts[name][file].save2file(file)
+        conc_ts[name][file].save2file_fs(file)
         
 intervals = [100,500,1000]
 interval_dict = {}
