@@ -23,7 +23,8 @@ class PuffConcentration(pd.DataFrame):
     def __init__(self,time,wtref,slow_FID,fast_FID,signal,open_rate):
         """ Initialise PointConcentration object. """
         super().__init__()
-                               
+        
+        #self['time'] = pd.Series(data=time)                         
         self['slow_FID'] = pd.Series(data=slow_FID)
         self['fast_FID'] = pd.Series(data=fast_FID)
         
@@ -70,7 +71,7 @@ class PuffConcentration(pd.DataFrame):
         signal[~threshold_indices] = 1
         
         # Apply median filter to signal, to guarantee a clean array
-        signal = sc.signal.medfilt(signal,kernel_size=9)
+        #signal = sc.signal.medfilt(signal,kernel_size=9)
         
         return cls(time,wtref,slow_FID,fast_FID,signal,open_rate*10)
     
@@ -104,7 +105,7 @@ class PuffConcentration(pd.DataFrame):
         self.begin_release_index = []
         for i in range(np.size(self.signal)-2):
                 if self.signal[i] == 0 and self.signal[i+1] != 0:
-                    self.begin_release_index.append(i)
+                    self.begin_release_index.append(i+1)
     
         return self.begin_release_index
     
@@ -151,7 +152,7 @@ class PuffConcentration(pd.DataFrame):
             index = begin
             end = begin + 1
             dose = 0
-            while dose < 0.95*value:
+            while dose < 0.2*value:
                   dose = self.net_concentration[begin:end].sum()
                   end += 1
                   index += 1
@@ -166,7 +167,7 @@ class PuffConcentration(pd.DataFrame):
             index = begin
             end = begin + 1
             dose = 0
-            while dose < 0.05*value:
+            while dose < 0.3*value:
                   dose = self.net_concentration[begin:end].sum()
                   end += 1
                   index += 1
@@ -411,7 +412,7 @@ for name in namelist:
         conc_ts[name][file].detect_begin_release_period()
         conc_ts[name][file].detect_end_release_period()
         conc_ts[name][file].calc_release_length()
-        conc_ts[name][file].offset_correction()
+#        conc_ts[name][file].offset_correction()
         conc_ts[name][file].get_dosage()
         conc_ts[name][file].detect_arrival_time()
         conc_ts[name][file].detect_leaving_time()
@@ -423,19 +424,19 @@ for name in namelist:
         conc_ts[name][file].apply_threshold_concentration()
         test = conc_ts[name][file].check_against_avg_puff()
         results = conc_ts[name][file].get_puff_statistics()
-        conc_ts[name][file].save2file(file)
-        writer = pd.ExcelWriter(path + 'test.xlsx')
-        results.to_excel(writer,sheet_name='Puff Test')
+#        conc_ts[name][file].save2file(file)
+#        writer = pd.ExcelWriter(path + 'test.xlsx')
+#        results.to_excel(writer,sheet_name='Puff Test')
 
-plt.figure(0)     
-results['peak concentration'].plot.hist(title='Peak C')
-plt.figure(1)
-results['peak time'].plot.hist(title='Peak t')
-plt.figure(2)
-results['arrival time'].plot.hist(title='Arrival t')
-plt.figure(3)
-results['leaving time'].plot.hist(title='Leaving t')
-plt.figure(4)
-results['ascent time'].plot.hist(title='Ascent t')
-plt.figure(5)
-results['descent time'].plot.hist(title='Descent t')
+#plt.figure(0)     
+#results['peak concentration'].plot.hist(title='Peak C')
+#plt.figure(1)
+#results['peak time'].plot.hist(title='Peak t')
+#plt.figure(2)
+#results['arrival time'].plot.hist(title='Arrival t')
+#plt.figure(3)
+#results['leaving time'].plot.hist(title='Leaving t')
+#plt.figure(4)
+#results['ascent time'].plot.hist(title='Ascent t')
+#plt.figure(5)
+#results['descent time'].plot.hist(title='Descent t')
