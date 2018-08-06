@@ -1,13 +1,13 @@
 import numpy as np
 import logging
 import os
+import pandas as pd
 import windtunnel as wt
-
 
 logger = logging.getLogger()
 __all__ = ['Timeseries']
 
-class Timeseries():
+class Timeseries(pd.DataFrame):
     """ Timeseries is a class that holds data collected by the BSA software in
     the standard BSA software output. The class can hold die raw timeseries,
     the corresponding wtref, the components and coordinates of each
@@ -24,13 +24,16 @@ class Timeseries():
     @parameter: t_transit, type = np.array"""
     def __init__(self,u,v,x=None,y=None,z=None,t_arr=None,t_transit=None):
         """ Initialise Timerseries() object. """
+        super().__init__()
+                                  
+        self['u'] = pd.Series(data=u)
+        self['v'] = pd.Series(data=v)
+        
         self.x = x
         self.y = y
         self.z = z
         self.t_arr = t_arr
         self.t_transit = t_transit
-        self.u = u
-        self.v = v
         self.weighted_u_mean = None
         self.weighted_comp_2_mean = None
         self.weighted_u_var = None
@@ -121,8 +124,10 @@ class Timeseries():
     def equidistant(self):
         """ Create equidistant time series. """
         self.t_eq = np.linspace(self.t_arr[0],self.t_arr[-1],len(self.t_arr))
-        self.u = wt.equ_dist_ts(self.t_arr,self.t_eq,self.u)
-        self.v = wt.equ_dist_ts(self.t_arr,self.t_eq,self.v)
+        self.u[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.u)
+        self.v[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.v)
+        
+        self.index = self.t_eq
 
     def mask_outliers(self,std_mask=5.):
         """ Mask outliers and print number of outliers. std_mask specifies the
@@ -161,6 +166,24 @@ class Timeseries():
         """ Calculate wind direction from components. """
         unit_WD = np.arctan2(self.v,self.u) * 180/np.pi
         self.direction = (360 + unit_WD) % 360
+                         
+    def wind_direction_mag_less_180(self):
+        """ Return the wind direction in the range -180 to +180 degrees. The 
+        'direction' list is in the range 0 to 360 degrees. """
+        # Set up output array
+        ret = np.zeros(len(self.direction))
+        
+        # Calculate equivalent angles for all directions greater than 180
+        i = 0
+        while (i < len(ret)):
+            angle = self.direction[i]
+            if(angle > 180):
+                ret[i] = angle - 360
+            else:
+                ret[i] = angle
+            i += 1
+            
+        return ret
 
     @property
     def weighted_component_mean(self):

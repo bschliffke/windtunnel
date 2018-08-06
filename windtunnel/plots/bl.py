@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Plotting tools for boundary layer assessment. """
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy import signal
 import windtunnel as wt
 
 
@@ -18,6 +19,8 @@ __all__ = [
     'plot_Re_independence',
     'plot_convergence_test',
     'plot_convergence',
+    'plot_JTFA_STFT',
+    'plot_wind_dir_hist',
 ]
 
 def plot_wrapper(x, y, lat=False, ax=None, **kwargs):
@@ -94,10 +97,12 @@ def plot_scatter_wght(transit_time,x,y,std_mask=5.,ax=None,**kwargs):
        ax = plt.gca()
        
     # Find outliers
-    x_mask = x<(std_mask*(np.sqrt(wt.transit_time_weighted_var(transit_time,x))+
-                                wt.transit_time_weighted_mean(transit_time,x)))
-    y_mask = y<(std_mask*(np.sqrt(wt.transit_time_weighted_var(transit_time,y))+
-                                wt.transit_time_weighted_mean(transit_time,y)))
+    x_mask = x<(std_mask*(np.sqrt(
+                          wt.transit_time_weighted_var(transit_time,x))+
+                          wt.transit_time_weighted_mean(transit_time,x)))
+    y_mask = y<(std_mask*(np.sqrt(
+                          wt.transit_time_weighted_var(transit_time,y))+
+                          wt.transit_time_weighted_mean(transit_time,y)))
 
     mask = np.logical_and(x_mask, y_mask)
 
@@ -204,7 +209,8 @@ def plot_turb_int(data,heights,yerr=0,component='I_u',lat=False,
         ax.set_xlabel(r'turbulence intensity '+component)
         ax.set_ylabel('z full-scale [m]')
     else:
-        ax.legend([l],labels,bbox_to_anchor=(0.5, 1.04),loc=8,numpoints=1,fontsize=14)
+        ax.legend([l],labels,bbox_to_anchor=(0.5, 1.04),loc=8,numpoints=1,
+                                                                  fontsize=14)
         ax.set_xlabel('y full-scale [m]')
         ax.set_ylabel(r'turbulence intensity '+component)
     
@@ -599,3 +605,161 @@ def plot_convergence(data_dict,ncols=3,**kwargs):
         plot_convergence_test(data,ylabel=key,ax=ax,**kwargs)        
 
     return axes
+
+def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v', 
+                   window_length = 3500, fixed_limits = (None, None), 
+                   ymax = None):
+    """ Plots the joint time frequency analysis using a short-time Fourier
+    transform smoothed and raw for both wind components in one figure. Returns
+    the figure. To change overlap, 
+    @parameter: u1: array of u-component perturbations
+    @parameter: v1: array of second-component perturbations
+    @parameter: t_eq: as defined by Timeseries
+    @parameter: height: z as defined by Timeseries
+    @parameter: second_comp, type = string: the name of the second measured
+                wind component
+    @parameter: window_length, type = int: window length in ms"""
+    
+    #set the window size to 3500 ms - this seems to caputure the relevant 
+    #frequency range
+    sampling_period = t_eq[1] - t_eq[0]
+    pointsPerSegment = window_length / (sampling_period)
+        
+    
+    # Analyze u - f is frequency, t is time, and Zxx is the Fourier transform
+    f, t, Zxx = signal.stft(u1, fs = 1.0 / (sampling_period), \
+    window = 'parzen', padded = False, noverlap = (pointsPerSegment/2), 
+                                                   nperseg = pointsPerSegment) 
+    # get nondimensionalized forms of f and Zxx - 
+    # these are f*z/h and f*S/sigma^2, respectively
+    reduced_transform_u1, reduced_freqs_u1, aliasing_u1 = \
+    wt.calc_normalization_params(f, Zxx, t, height, np.nanmean(u1),
+                                 u1.std(dtype=float), len(t_eq))
+   
+    # Analyze second component
+    f, t, Zxx = signal.stft(v1, fs = 1.0 / (sampling_period), \
+                            window = 'parzen', padded = False, 
+                            noverlap = (pointsPerSegment/2),
+                            nperseg = pointsPerSegment)
+    # and nondimensionalize    
+    reduced_transform_v1, reduced_freqs_v1, aliasing_v1 = \
+    wt.calc_normalization_params(f, Zxx, t, height, np.nanmean(u1),
+                                 u1.std(dtype=float), len(t_eq))
+    reduced_transform_u1 *= 10e17
+    reduced_transform_v1 *= 10e17
+    # Create figure - 2x2 subplots
+    fig, axarr = plt.subplots(2, 2)
+    
+    if(fixed_limits[0] is None or fixed_limits[1] is None):
+        levels_u1 = np.linspace(np.nanmin(reduced_transform_u1.real), 
+                                np.nanmax(reduced_transform_u1.real)*0.05,30)
+    else:
+        levels_u1 = np.linspace(fixed_limits[0], fixed_limits[1], 30)
+        
+    # Upper left plot - u1 
+    axarr[0][0].set_yscale('log')
+    im1=axarr[0][0].pcolormesh(t, reduced_freqs_u1[f < 0.1], 
+                               reduced_transform_u1.real[f < 0.1][:], 
+                               cmap='winter', 
+                               vmin=np.nanmin(reduced_transform_u1.real), 
+                               vmax=np.nanmax(reduced_transform_u1.real)*0.05)
+    axarr[0][0].set_xlabel('f*S/sigma^2')
+    axarr[0][0].set_ylabel('Frequency (f*h/mean_u)')
+    axarr[0][0].set_title('u\' STFT')
+    if(not ymax is None):
+        axarr[0][0].set_ylim((0, ymax))
+    else:
+        axarr[0][0].set_ylim(np.nanmean(reduced_freqs_u1[f < 0.1])/75)
+    
+    # Lower left plot - u1 smoothed
+    axarr[1][0].set_yscale('log')
+    im2 = axarr[1][0].contourf(t, reduced_freqs_u1[f < 0.1],
+                               reduced_transform_u1.real[f < 0.1][:],
+                               levels_u1, cmap = 'winter')
+    axarr[1][0].set_xlabel('f*S/sigma^2')
+    axarr[1][0].set_ylabel('Frequency (f*h/mean_u)')
+    axarr[1][0].set_title('u\' STFT smoothed')
+    if(not ymax is None):
+        axarr[1][0].set_ylim((0, ymax))
+    else:
+        axarr[1][0].set_ylim(np.nanmean(reduced_freqs_u1[f < 0.1])/75)
+   
+    # Upper right plot - second comp
+    axarr[0][1].set_yscale('log')
+    im3=axarr[0][1].pcolormesh(t, reduced_freqs_v1[f < 0.1], 
+                               reduced_transform_v1.real[f < 0.1][:],
+                               cmap='winter',
+                               vmin=np.nanmin(reduced_transform_v1.real),
+                               vmax=np.nanmax(reduced_transform_v1.real)*0.05)
+    axarr[0][1].set_xlabel('f*S/sigma^2')
+    axarr[0][1].set_ylabel('Frequency (f*h/mean_v)')
+    axarr[0][1].set_title(second_comp + '\' STFT')
+    if(not ymax is None):
+        axarr[0][1].set_ylim((0, ymax))
+    else:
+        axarr[0][1].set_ylim(np.nanmean(reduced_freqs_v1[f < 0.1])/75)
+    
+    # Lower right plot - second comp smoothed
+    axarr[1][1].set_yscale('log')
+    im4 = axarr[1][1].contourf(t, reduced_freqs_v1[f < 0.1],
+                               reduced_transform_v1.real[f < 0.1][:],
+                               levels_u1,
+                               cmap = 'winter')
+    axarr[1][1].set_xlabel('f*S/sigma^2')
+    axarr[1][1].set_ylabel('Frequency (f*h/mean_v)')
+    axarr[1][1].set_title(second_comp + '\' STFT smoothed')
+    if(not ymax is None):
+        axarr[1][1].set_ylim((0, ymax))
+    else:
+        axarr[1][1].set_ylim(np.nanmean(reduced_freqs_v1[f < 0.1])/75)
+
+
+    print('reduced_transform u min '+str(np.nanmin(reduced_transform_u1.real))
+     + '\n                     max '+str(np.nanmax(reduced_transform_u1.real))
+     + '\n                     mean '+str(np.nanmean(reduced_transform_u1.real)
+          ))
+    print('reduced_freqs u     min '+str(np.nanmin(reduced_freqs_u1.real))
+     + '\n                     max '+str(np.nanmax(reduced_freqs_u1.real))
+     + '\n                     mean '+str(np.nanmean(reduced_freqs_u1.real)))
+    print('reduced_transform v min '+str(np.nanmin(reduced_transform_v1.real))
+     + '\n                     max '+str(np.nanmax(reduced_transform_v1.real))
+     + '\n                     mean '+str(np.nanmean(reduced_transform_v1.real)
+          ))
+    print('reduced_freqs v     min '+str(np.nanmin(reduced_freqs_v1.real))
+     + '\n                     max '+str(np.nanmax(reduced_freqs_v1.real))
+     + '\n                     mean '+str(np.nanmean(reduced_freqs_v1.real)))
+    
+    cbar1 = fig.colorbar(im1, ax = axarr[0][0])
+    cbar2 = fig.colorbar(im2, ax = axarr[1][0])
+    cbar3 = fig.colorbar(im3, ax = axarr[0][1])
+    cbar4 = fig.colorbar(im4, ax = axarr[1][1])
+
+    if(fixed_limits != (None, None)):
+        cbar1.set_clim(fixed_limits[0], fixed_limits[1])
+        cbar2.set_clim(fixed_limits[0], fixed_limits[1])
+        cbar3.set_clim(fixed_limits[0], fixed_limits[1])
+        cbar4.set_clim(fixed_limits[0], fixed_limits[1])
+    else:
+        cbar1.set_clim(np.nanmin(reduced_transform_u1.real),
+                       np.nanmax(reduced_transform_u1.real)*0.05)
+        cbar3.set_clim(np.nanmin(reduced_transform_v1.real),
+                       np.nanmax(reduced_transform_v1.real)*0.05)
+     
+    cbar1.update_normal(im1)
+    cbar2.update_normal(im2)
+    cbar3.update_normal(im3)
+    cbar4.update_normal(im4)
+        
+    plt.tight_layout()
+    
+    return fig
+
+def plot_wind_dir_hist(timeseriesObj):
+    """ Simple wind direction histogram plot
+    @parameter: Timeseries
+    """
+
+    wt.plots.plot_hist(timeseriesObj.wind_direction_mag_less_180())
+    plt.title('Wind direction at ' + str(timeseriesObj.z) + 'm')
+    plt.xlabel('Wind direction in degrees')
+    plt.ylabel('Relative Frequency')

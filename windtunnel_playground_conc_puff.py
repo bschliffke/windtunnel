@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import windtunnel as wt
 import matplotlib.pyplot as plt
+import numpy as np
 import os
+import pandas as pd
 import scipy as sc
+import windtunnel as wt
 
-class PuffConcentration():
+class PuffConcentration(pd.DataFrame):
     """ PuffConcentration is a class that holds data collected during 
     a continuous release point concentration measurement. The class can hold 
     the raw timeseries, the corresponding wtref and all other quantities 
@@ -13,37 +14,34 @@ class PuffConcentration():
     nondimensionalising it,  XXX adapting the scale, making it equidistant and 
     masking outliers XXX . All the information in a Timeseries object can be 
     saved to a txt file.
-    @parameter: time, type = np.array
+    @parameter: time, type = pd.Series
     @parameter: wtref, type = np.array
-    @parameter: fast_FID, type = np.array
-    @parameter: slow_FID, type = np.array
+    @parameter: fast_FID, type = pd.Series
+    @parameter: slow_FID, type = pd.Series
     @parameter: signal, type = np.array
     @parameter: open_rate, type = np.array"""
     def __init__(self,time,wtref,slow_FID,fast_FID,signal,open_rate):
         """ Initialise PointConcentration object. """
+        super().__init__()
+        
+        #self['time'] = pd.Series(data=time)                         
+        self['slow_FID'] = pd.Series(data=slow_FID)
+        self['fast_FID'] = pd.Series(data=fast_FID)
+        
         self.x = None
         self.y = None
         self.z = None
         self.scale = None
-        self.wtref_mean = None
+        self.wtref = None
         self.begin_release_period = None
         self.end_release_period = None
         self.begin_release_index = None
         self.end_release_index = None
         self.release_length = None
-        self.dosage = None
-        self.slow_FID = slow_FID
-        self.fast_FID = fast_FID
         self.signal = signal
-        self.open_rate = open_rate #[%]
         self.time = time
-        self.wtref = wtref
-        self.standard_temp = 20 # [°C]
-        self.Kelvin_temp = 273.15 # [°C]
-        self.standard_pressure = 101325 # [Pa]
-        self.R=8.3144621 # universal gas constant [kJ/kgK]
-        self.__check_sum = 0
-
+        self.open_rate = open_rate #[%]
+        
     def __repr__(self):
         """ Return the x, y and z coordinate of the PointConcentration 
         object. """
@@ -57,7 +55,6 @@ class PuffConcentration():
         return self.x == other.x and self.y == other.y and self.z == other.z
 
     @classmethod
-    #TODO
     def from_file(cls,filename):
         """ Create PuffConcentration object from file. open_rate is converted
         to %."""
@@ -80,12 +77,8 @@ class PuffConcentration():
     
     def calc_net_concentration(self):
         """ Calculate net concentration in [ppmV]. """
-        self.__check_sum = self.__check_sum + 1        
-        
-        self.net_concentration = self.fast_FID - self.slow_FID
+        self['net_concentration'] = self.fast_FID - self.slow_FID
        
-        return self.net_concentration
-
     def detect_end_release_index(self):
         """ Detects the indices of the end of each release period. Returns a
         list containing the index of the last timestamp of each release 
@@ -102,7 +95,7 @@ class PuffConcentration():
         containing the last timestamp of each release period. """
         indices = self.detect_end_release_index()
         self.end_release_period = self.time[indices]
-                
+    
         return self.end_release_period
     
     def detect_begin_release_index(self):
@@ -113,7 +106,7 @@ class PuffConcentration():
         for i in range(np.size(self.signal)-2):
                 if self.signal[i] == 0 and self.signal[i+1] != 0:
                     self.begin_release_index.append(i)
-                
+    
         return self.begin_release_index
     
     def detect_begin_release_period(self):
@@ -121,9 +114,9 @@ class PuffConcentration():
         containing the first timestamp of each release period. """
         indices = self.detect_begin_release_index()
         self.begin_release_period = self.time[indices]
-        
+    
         return self.begin_release_period
-       
+    
     def calc_release_length(self):
         """ Calculate the length of each release period. Returns an np.array
         containing the duration of each release period. """
@@ -144,13 +137,11 @@ class PuffConcentration():
         for i,value in enumerate(beginnings):
             begin = value
             if i == np.size(beginnings)-1:
-                self.dosage.append(np.sum(self.net_concentration[begin:]))
+                self.dosage.append(self.net_concentration[begin:].sum())
 
             if i < np.size(beginnings)-1:
                 end = beginnings[i+1]
-                self.dosage.append(np.sum(self.net_concentration[begin:end]))
-
-        return self.dosage
+                self.dosage.append(self.net_concentration[begin:end].sum())
 
     def detect_leaving_time(self):
         """ Detects the end of each puff. Returns an np.array 
@@ -162,12 +153,10 @@ class PuffConcentration():
             end = begin + 1
             dose = 0
             while dose < 0.95*value:
-                  dose = np.sum(self.net_concentration[begin:end])
+                  dose = self.net_concentration[begin:end].sum()
                   end += 1
                   index += 1
             self.leaving_time.append(self.time[index]-self.time[begin])
-            
-        return self.leaving_time
     
     def detect_arrival_time(self):
         """ Detects the beginning of each puff. Returns an np.array 
@@ -179,21 +168,16 @@ class PuffConcentration():
             end = begin + 1
             dose = 0
             while dose < 0.05*value:
-                  dose = np.sum(self.net_concentration[begin:end])
+                  dose = self.net_concentration[begin:end].sum()
                   end += 1
                   index += 1
             self.arrival_time.append(self.time[index]-self.time[begin])
-            
-        return self.arrival_time
     
     def get_residence_time(self):
         """ Calculate the residence time of each puff. Returns an np.array. """
-        self.residence_time = np.array([])
-        self.residence_time = np.asarray(self.leaving_time) -\
-                              np.asarray(self.arrival_time)
-        
-        return self.residence_time
-
+        self.residence_time = [i - j for i, j in zip(self.leaving_time,
+                                                     self.arrival_time)]
+    
     def get_peak_concentration(self):
         """ Acquire peak concentration of each puff. Returns a list. """
         self.peak_concentration = []
@@ -205,9 +189,7 @@ class PuffConcentration():
                 end = self.begin_release_index[i+1]
                 
             self.peak_concentration.append(
-                                    np.max(self.net_concentration[begin:end]))
-
-        return self.peak_concentration
+                                    self.net_concentration[begin:end].max())
 
     def get_peak_time(self):
         """ Acquire peak time of each puff. Returns a list. """
@@ -218,48 +200,24 @@ class PuffConcentration():
                 end = -1
             else:
                 end = self.begin_release_index[i+1]
-                
+
             time = self.time[begin:end]
             self.peak_time.append(float(time[np.where(
-                                  self.net_concentration[begin:end] == \
-                                  np.max(self.net_concentration[begin:end]
-                                  ))] - self.time[begin]))
-
-        return self.peak_time
+                                self.net_concentration[begin:end] ==
+                                self.net_concentration[begin:end].max())]) - \
+                                self.time[begin])
 
     def get_ascent_time(self):
         """ Calculate the ascent time between arrrival time and peak time. 
         Returns an np.array. """
-        self.ascent_time = np.array([])
-        
-        self.ascent_time = np.asarray(self.peak_time) - \
-                           np.asarray(self.arrival_time)
-        
-        return self.ascent_time
-
+        self.ascent_time = [i - j for i, j in zip(self.peak_time,
+                                                  self.arrival_time)]
     def get_descent_time(self):
         """ Calculate the ascent time between arrrival time and peak time. 
         Returns an np.array. """
-        self.descent_time = np.array([])
-        
-        self.descent_time = np.asarray(self.leaving_time) - \
-                            np.asarray(self.peak_time)
-        
-        return self.descent_time
-        
-    def average_values(self):
-        """ Calculate the average values of the arrival time, leaving time,
-        peak time and peak concentration. """
-        
-        self.avg_arrival_time = np.nanmean(self.arrival_time)
-        self.avg_leaving_time = np.nanmean(self.leaving_time)
-        self.avg_peak_time = np.nanmean(self.peak_time)
-        self.avg_peak_concentration = np.nanmean(self.peak_concentration)
-        
-        
-        return self.avg_arrival_time, self.avg_leaving_time, \
-               self.avg_peak_time, self.avg_peak_concentration
-               
+        self.descent_time = [i - j for i, j in zip(self.leaving_time,
+                                                   self.peak_time)]
+
     def offset_correction(self):
         """ Correct a non-zero offset in the concentration measured. """
         avg_release = []
@@ -326,15 +284,15 @@ class PuffConcentration():
                          
         return self.puff_deviations
     
-    def apply_threshold_concentration(self,threshold_concentration=0):
+    def apply_threshold_concentration(self,threshold_concentration=0.):
         """ Apply a given threshold concentration to peak_concentration to 
         remove weak puffs. The default value for threshold_concentration 
-        is 0. """
+        is 0. (float). """
     
         self.threshold_concentration = threshold_concentration
-        mask = np.where(np.asarray(self.peak_concentration) > \
-                                   self.threshold_concentration)
-        
+        mask = np.where(np.asarray(self.peak_concentration) > 
+                        self.threshold_concentration)[0]
+       
         self.dosage = np.asarray(self.dosage)[mask]
         self.arrival_time = np.asarray(self.arrival_time)[mask]
         self.leaving_time = np.asarray(self.leaving_time)[mask]
@@ -342,7 +300,20 @@ class PuffConcentration():
         self.descent_time = np.asarray(self.descent_time)[mask]
         self.peak_time = np.asarray(self.peak_time)[mask]
         self.peak_concentration = np.asarray(self.peak_concentration)[mask]
+    
+    def get_puff_statistics(self):
+        """ Returns DataFrame with all puff information. """
+        data = {'arrival time': self.arrival_time,
+                'leaving time': self.leaving_time,
+                'peak time': self.peak_time,
+                'peak concentration': self.peak_concentration,
+                'ascent time': self.ascent_time,
+                'descent time': self.descent_time}
         
+        return_data = pd.DataFrame(data=data)
+        
+        return return_data
+    
     def save2file(self,filename,out_dir=None):
         """ Save data from PointConcentration object to txt file. filename must
         include '.txt' ending. If no out_dir directory is provided './' is set 
@@ -386,7 +357,42 @@ class PuffConcentration():
         release_length. """ 
         
         return np.size(self.release_length)
+    
+    @property
+    def avg_arrival_time(self):
+        """ Get average arrival time. """ 
+        
+        return np.nanmean(self.arrival_time)
 
+    @property
+    def avg_leaving_time(self):
+        """ Get average leaving time. """ 
+        
+        return np.nanmean(self.leaving_time)
+    
+    @property
+    def avg_peak_time(self):
+        """ Get average peak time. """ 
+        
+        return np.nanmean(self.peak_time)
+    
+    @property
+    def avg_peak_concentration(self):
+        """ Get average peak concentration. """ 
+        
+        return np.nanmean(self.peak_concentration)
+    
+    @property
+    def avg_ascent_time(self):
+        """ Get average ascent time. """ 
+        
+        return np.nanmean(self.ascent_time)
+    
+    @property
+    def avg_descent_time(self):
+        """ Get average descent time. """ 
+        
+        return np.nanmean(self.descent_time)
 #%%#
 # Concentration stuff
 path = 'C:/Users/u300517/Desktop/puff programm 29.07.2011/'
@@ -416,45 +422,21 @@ for name in namelist:
         conc_ts[name][file].get_ascent_time()
         conc_ts[name][file].get_descent_time()
         conc_ts[name][file].apply_threshold_concentration()
-        conc_ts[name][file].average_values()
         test = conc_ts[name][file].check_against_avg_puff()
+        results = conc_ts[name][file].get_puff_statistics()
         conc_ts[name][file].save2file(file)
+        writer = pd.ExcelWriter(path + 'test.xlsx')
+        results.to_excel(writer,sheet_name='Puff Test')
 
-plt.figure(0)    
-plt.plot(np.arange(np.size(conc_ts[name][file].signal[:6000])),
-                           conc_ts[name][file].signal[:6000])
-
+plt.figure(0)     
+results['peak concentration'].plot.hist(title='Peak C')
 plt.figure(1)
-plt.plot(conc_ts[name][file].time[-10000:],
-         conc_ts[name][file].net_concentration[-10000:])
-
-peak_conc = conc_ts[name][file].peak_concentration
-peak_t = conc_ts[name][file].peak_time
-arrival_t = conc_ts[name][file].arrival_time
-leaving_t = conc_ts[name][file].leaving_time
-ascent_t = conc_ts[name][file].ascent_time
-descent_t = conc_ts[name][file].descent_time
-                   
+results['peak time'].plot.hist(title='Peak t')
 plt.figure(2)
-wt.plots.plot_hist(peak_conc)
-plt.title('Peak C')
-
+results['arrival time'].plot.hist(title='Arrival t')
 plt.figure(3)
-wt.plots.plot_hist(peak_t)
-plt.title('Peak t')
-
+results['leaving time'].plot.hist(title='Leaving t')
 plt.figure(4)
-wt.plots.plot_hist(arrival_t)
-plt.title('Arrival t')
-
+results['ascent time'].plot.hist(title='Ascent t')
 plt.figure(5)
-wt.plots.plot_hist(leaving_t)
-plt.title('Leaving t')
-
-plt.figure(6)
-wt.plots.plot_hist(ascent_t)
-plt.title('Ascent t')
-
-plt.figure(7)
-wt.plots.plot_hist(descent_t)
-plt.title('Descent t')
+results['descent time'].plot.hist(title='Descent t')

@@ -3,6 +3,7 @@
 import numpy as np
 import logging
 import os
+import pandas as pd
 import windtunnel as wt
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -11,7 +12,7 @@ logger = logging.getLogger()
 __all__ = ['PointConcentration']
 
 # %%#    
-class PointConcentration():
+class PointConcentration(pd.DataFrame):
     """ PointConcentration is a class that holds data collected during 
     a continuous release point concentration measurement. The class can hold 
     the raw timeseries, the corresponding wtref and all other quantities 
@@ -26,18 +27,21 @@ class PointConcentration():
     @parameter: open_rate, type = np.array"""
     def __init__(self,time,wtref,slow_FID,fast_FID,open_rate):
         """ Initialise PointConcentration object. """
+        super().__init__()
+                                  
+        self['slow_FID'] = pd.Series(data=slow_FID)
+        self['fast_FID'] = pd.Series(data=fast_FID)
+        
         self.x = None
         self.y = None
         self.z = None
         self.scale = None
         self.wtref_mean = None
-        self.slow_FID = slow_FID
-        self.fast_FID = fast_FID
         self.open_rate = open_rate
         self.time = time
         self.wtref = wtref
         self.standard_temp = 20 # [°C]
-        self.Kelvin_temp = 273.15 # [°C]
+        self.Kelvin_temp = 273.15 # [°K]
         self.standard_pressure = 101325 # [Pa]
         self.R=8.3144621 # universal gas constant [kJ/kgK]
         self.__check_sum = 0
@@ -90,7 +94,8 @@ class PointConcentration():
             return (your_measurement)
                             
         else:
-            raise Exception('Please enter or calculate all data necessary!')
+            raise Exception('Please enter or calculate all full scale data '\
+                            'necessary!')
 
     def ambient_conditions(self,x,y,z,pressure,temperature,calibration_curve,
                            mass_flow_controller, calibration_factor = 0):
@@ -118,21 +123,20 @@ class PointConcentration():
         self.ref_height = ref_height
         self.full_scale_ref_length = self.scale*self.ref_length
         
-    def tracer_information(self,gas_name,mol_weight,density,gas_factor):
+    def tracer_information(self,gas_name,mol_weight,gas_factor):
         """ Collect information on tracer gas used during measurement.
-        Molecular weight in [kg/mol],   """
+        Molecular weight in [kg/mol]. """
         self.__check_sum = self.__check_sum + 1
         
         self.gas_name = gas_name
         self.mol_weight = mol_weight
-        self.density = density
         self.gas_factor = gas_factor
         
     def full_scale_information(self,full_scale_wtref,full_scale_flow_rate):
         """ Collect information on desired full scale information.
-        full_scale_wtref in [m/s]
-        full_scale_flow_rate is automatically adjusted to standard atmosphere
-        conditions. input in [kg/s], output in [m^3/s]"""
+        full_scale_wtref in [m/s]. full_scale_flow_rate is automatically 
+        adjusted to standard atmosphere conditions. 
+        input in [kg/s], output in [m^3/s]. """
         self.__check_sum = self.__check_sum + 1
         
         self.full_scale_wtref = full_scale_wtref
@@ -235,7 +239,7 @@ class PointConcentration():
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
 
-        output_file = out_dir + filename
+        output_file = out_dir + '_ms_' + filename
         np.savetxt(output_file,np.vstack((self.time,
                                           self.c_star,
                                           self.net_concentration)
@@ -245,26 +249,24 @@ class PointConcentration():
             ""+'\n'+\
             "geometric scale: 1:{}".format(float(self.scale))\
             +""+'\n'+\
-            "Variables: x: {}, y: {}, z: {}, ambient temperature: {:.1f}, "\
-            "ambient pressure: {:.2f}, mass flow rate {:.4f}, "\
-            "reference length (model): {:.4f}, "\
-            "reference length (full-scale): {:.4f}, Tracer gas: {}, "\
-            "mol. weight tracer: {:.4f}, tracer density: {:.4f}, "\
+            "Variables: x: {} [mm], y: {} [mm], z: {} [mm], "\
+            "ambient temperature: {:.1f} [°C], ambient pressure: {:.2f} [Pa],"\
+            " mass flow rate {:.4f} [kg/s], "\
+            "reference length (model): {:.4f} [m], "\
+            "Tracer gas: {}, mol. weight tracer: {:.4f} [mol/kg], "\
             "gas factor: {:.6f}, calibartion curve: {:.6f}, "\
-            "wtref: {:.4f}, full scale flow rate: {:.4f}".format(self.x,self.y,
-                                                  self.z,
-                                                  self.temperature,
-                                                  self.pressure,
-                                                  self.mass_flow_rate,
-                                                  self.ref_length,
-                                                  self.gas_name,
-                                                  self.mol_weight,
-                                                  self.density,
-                                                  self.gas_factor,
-                                                  self.calibration_curve,
-                                                  self.wtref_mean)\
+            "wtref: {:.4f} [m/s]".format(self.x,self.y,self.z,
+                                         self.temperature,
+                                         self.pressure,
+                                         self.mass_flow_rate,
+                                         self.ref_length,
+                                         self.gas_name,
+                                         self.mol_weight,
+                                         self.gas_factor,
+                                         self.calibration_curve,
+                                         self.wtref_mean)\
             +""+'\n'+\
-            "\"time\" \"c_star\" \"net_concentration\" ")
+            "\"time [ms]\" \"c_star [-]\" \"net_concentration [ppmV]\" ")
 
     def save2file_fs(self,filename,out_dir=None):
         """ Save full scale and model scale data from PointConcentration object
@@ -272,12 +274,18 @@ class PointConcentration():
         directory is provided './' is set as standard.
         @parameter: filename, type = str
         @parameter: out_dir, type = str"""
+        if self.__check_sum < 8:
+            raise Exception('Please enter or calculate all full scale data '\
+                            'necessary!')
+            
         if out_dir is None:
             out_dir = './'
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
+            
 
-        output_file = out_dir + filename
+
+        output_file = out_dir + '_fs_' + filename
         np.savetxt(output_file,np.vstack((self.full_scale_time,
                                           self.c_star,
                                           self.net_concentration,
@@ -288,13 +296,16 @@ class PointConcentration():
             ""+'\n'+\
             "geometric scale: 1:{}".format(float(self.scale))\
             +""+'\n'+\
-            "Variables: x: {}, y: {}, z: {}, ambient temperature: {:.1f}, "\
-            "ambient pressure: {:.2f}, mass flow rate {:.4f}, "\
-            "reference length (model): {:.4f}, "\
-            "reference length (full-scale): {:.4f}, Tracer gas: {}, "\
-            "mol. weight tracer: {:.4f}, tracer density: {:.4f}, "\
+            "Variables: x: {} [m], y: {} [m], z: {} [m], "\
+            "ambient temperature: {:.1f} [°C], ambient pressure: {:.2f} [Pa],"\
+            " mass flow rate {:.4f} [kg/s], "\
+            "reference length (model): {:.4f} [m], "\
+            "reference length (full-scale): {:.4f} [m], Tracer gas: {}, "\
+            "mol. weight tracer: {:.4f} [mol/kg], "\
             "gas factor: {:.6f}, calibartion curve: {:.6f}, "\
-            "wtref: {:.4f}, full scale flow rate: {:.4f}".format(self.x,self.y,
+            "wtref: {:.4f} [m/s], full scale flow rate: {:.4f} [m^3/s]".format(
+                                                  self.x,
+                                                  self.y,
                                                   self.z,
                                                   self.temperature,
                                                   self.pressure,
@@ -303,14 +314,65 @@ class PointConcentration():
                                                   self.full_scale_ref_length,
                                                   self.gas_name,
                                                   self.mol_weight,
-                                                  self.density,
                                                   self.gas_factor,
                                                   self.calibration_curve,
                                                   self.wtref_mean,
                                                   self.full_scale_flow_rate)\
             +""+'\n'+\
-            "\"full scale time\" \"c_star\" \"net_concentration\" "\
-            "\"full_scale_concentration\"")
+            "\"full scale time [s]\" \"c_star [-]\" "\
+            "\"net_concentration [ppmV]\" \"full_scale_concentration [ppmV]\"")
+            
+    def save2file_avg(self,filename,out_dir=None):
+        """ Save average full scale and model scale data from 
+        PointConcentration object to txt file. filename must include '.txt' 
+        ending. If no out_dir directory is provided './' is set as standard.
+        @parameter: filename, type = str
+        @parameter: out_dir, type = str"""
+        if self.__check_sum < 8:
+            raise Exception('Please enter or calculate all full scale data '\
+                            'necessary!')
+            
+        if out_dir is None:
+            out_dir = './'
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
+
+        output_file = out_dir + '_avg_' + filename
+            
+        np.savetxt(output_file,np.vstack((np.nanmean(self.c_star),
+                                          np.nanmean(self.net_concentration),
+                                          np.nanmean(
+                                                self.full_scale_concentration))
+                                          ).transpose(),
+            fmt='%.4f',\
+            header="General concentration measurement data:"+'\n'+\
+            ""+'\n'+\
+            "geometric scale: 1:{}".format(float(self.scale))\
+            +""+'\n'+\
+            "Variables: x: {} [m], y: {} [m], z: {} [m], ambient temperature: {:.1f} [°C], "\
+            "ambient pressure: {:.2f} [Pa], mass flow rate {:.4f} [kg/s], "\
+            "reference length (model): {:.4f} [m], "\
+            "reference length (full-scale): {:.4f} [m], Tracer gas: {}, "\
+            "mol. weight tracer: {:.4f} [mol/kg], "\
+            "gas factor: {:.6f}, calibartion curve: {:.6f}, "\
+            "wtref: {:.4f} [m/s], full scale flow rate: {:.4f} [m^3/s]".format(
+                                                  self.x,
+                                                  self.y,
+                                                  self.z,
+                                                  self.temperature,
+                                                  self.pressure,
+                                                  self.mass_flow_rate,
+                                                  self.ref_length,
+                                                  self.full_scale_ref_length,
+                                                  self.gas_name,
+                                                  self.mol_weight,
+                                                  self.gas_factor,
+                                                  self.calibration_curve,
+                                                  self.wtref_mean,
+                                                  self.full_scale_flow_rate)\
+            +""+'\n'+\
+            "\"c_star [-]\" \"net_concentration [ppmV]\" "\
+            "\"full_scale_concentration [ppmV]\"")
         
 def plot_boxplots(data_dict,ylabel=None,**kwargs):
     """ Plot statistics of concentration measurements in boxplots. Expects
@@ -458,7 +520,6 @@ for name in namelist:
                                               ref_length=1/225,ref_height=None)
         conc_ts[name][file].tracer_information(gas_name='C12',
                                                mol_weight=28.97/1000,
-                                               density=1.1,
                                                gas_factor=0.5)
         conc_ts[name][file].full_scale_information(full_scale_wtref=6,
                                                    full_scale_flow_rate=0.5)
@@ -468,7 +529,9 @@ for name in namelist:
         conc_ts[name][file].calc_net_concentration()
         conc_ts[name][file].calc_c_star()
         data_dict[name] = conc_ts[name][file].to_full_scale()
-        conc_ts[name][file].save2file_fs(file)
+#        conc_ts[name][file].save2file_fs(file)
+#        conc_ts[name][file].save2file_ms(file)
+#        conc_ts[name][file].save2file_avg(file)
         
 intervals = [100,500,1000]
 interval_dict = {}

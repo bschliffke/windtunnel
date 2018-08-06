@@ -28,6 +28,7 @@ __all__ = [
     'power_law',
     'calc_alpha',
     'calc_z0',
+    'calc_normalization_params',
 ]
 
 def calc_intervalmean(indata,intervals,DD=False):    
@@ -347,93 +348,32 @@ def calc_spectra(u_comp,v_comp,t_eq,height):
     ## FFT
     fft_u = np.fft.fft(u_comp)*1./np.size(u_comp)        #  normalized fft
     fft_v = np.fft.fft(v_comp)*1./np.size(v_comp) 
+    uv_param = np.sqrt(fft_u * fft_v) # This is used in place of a true Fourier 
+                                      # transform to calculate diagonal energy
     
-    ## DISCRETE SPECTRA
-    nyquist_freq = np.size(t_eq)//2   #  nyquist frequency index
-
-    #  S == E/dn ; dn == 1
-    if np.size(u_comp)%2==0:
-        E_uu = np.hstack((np.abs(fft_u[1:nyquist_freq])**2 * 
-                          2.,np.abs(fft_u[nyquist_freq])**2))
-        
-        # frequency transformation (n to f as referenced in Stull, 
-        # p.314) P = N * dt; n=f/P
-        S_uu = E_uu * len(t_eq)*(t_eq[1]-t_eq[0])
-        E_vv = np.hstack((np.abs(fft_v[1:nyquist_freq])**2 *
-                          2.,np.abs(fft_v[nyquist_freq])**2))
-        
-        # frequency transformation (n to f as referenced in Stull, p.314) 
-        # P = N * dt; n=f/P
-        S_vv = E_vv * len(t_eq)*(t_eq[1]-t_eq[0])
-        E_uv = np.hstack((np.abs(fft_u[1:nyquist_freq])*
-                          np.abs(fft_v[1:nyquist_freq]) * 2.,
-                          np.abs(fft_u[nyquist_freq])*
-                          np.abs(fft_v[nyquist_freq])))
-        
-        # frequency transformation (n to f as referenced in Stull, p.314) 
-        # P = N * dt; n=f/P
-        S_uv = E_uv * len(t_eq)*(t_eq[1]-t_eq[0])
-    else:
-        E_uu = np.abs(fft_u[1:nyquist_freq+1])**2 * 2.
-        
-        # frequency transformation (n to f as referenced in Stull, p.314) 
-        # P = N * dt; n=f/P
-        S_uu = E_uu * len(t_eq)*(t_eq[1]-t_eq[0])
-        E_vv = np.abs(fft_v[1:nyquist_freq+1])**2 * 2.
-        
-        # frequency transformation (n to f as referenced in Stull, p.314) 
-        # P = N * dt; n=f/P
-        S_vv = E_vv * len(t_eq)*(t_eq[1]-t_eq[0])
-        E_uv = np.abs(fft_u[1:nyquist_freq+1])*np.abs(fft_v[1:nyquist_freq+1])*2.
-        
-        # frequency transformation (n to f as referenced in Stull, p.314)
-        # P = N * dt; n=f/P
-        S_uv = E_uv * len(t_eq)*(t_eq[1]-t_eq[0])
-
-    # dimensionless
-    S_uv = np.abs(freq[1:nyquist_freq+1])*S_uv/np.abs(u_comp.std()*v_comp.std())
-
-    ##  REDUCED FREQUENCY (PLOT and reference spectra)
-    reduced_freq = freq*height/np.mean(u_comp)
-
-    ##  SMOOTH SPECTRA
-    # use exponents for equi-distant bins in log plot
-    f_sm = np.hstack((np.array([0]),
-                      np.log10(np.abs(reduced_freq[1:nyquist_freq]))))
-    valcount, edges = np.histogram(f_sm,bins=np.arange(
-                                   f_sm.min(),f_sm.max()+10**(-5),0.05))
-    f_sm = np.zeros(valcount.shape)     
-    S_uu_sm = np.zeros(valcount.shape)
-    S_vv_sm = np.zeros(valcount.shape)
-    S_uv_sm = np.zeros(valcount.shape)
-
-    vc = 0  # counting values
-    for i,n in enumerate(valcount):
-        if n>0:
-            f_sm[i] = np.mean(np.abs(reduced_freq)[vc:vc+n])
-            S_uu_sm[i] = np.mean(S_uu[vc:vc+n])
-            S_vv_sm[i] = np.mean(S_vv[vc:vc+n])
-            S_uv_sm[i] = np.mean(S_uv[vc:vc+n])
-            vc=vc+n   
+    u_normalization_params = calc_normalization_params(freq, fft_u, t_eq, 
+                                                       height, 
+                                                       np.nanmean(u_comp), 
+                                                       np.std(u_comp), 
+                                                       len(u_comp))
+    v_normalization_params = calc_normalization_params(freq, fft_v, t_eq, 
+                                                       height, 
+                                                       np.nanmean(v_comp), 
+                                                       np.std(v_comp), 
+                                                       len(v_comp))
+    uv_normalization_params = calc_normalization_params(freq, uv_param, t_eq, 
+                                                       height, 
+                                                       np.nanmean(
+                                                       np.sqrt(v_comp*u_comp)), 
+                                                       np.std(
+                                                       np.sqrt(v_comp*u_comp)),
+                                                       len(v_comp))
     
-    ##  SORTING
-    f_arg = np.argsort(f_sm)
-    f_sm = f_sm[f_arg]
-    S_uu_sm = S_uu_sm[f_arg]
-    S_vv_sm = S_vv_sm[f_arg]
-    S_uv_sm = S_uv_sm[f_arg]
-    
-    ##  ALIASING
-    u_aliasing = f_sm.size-9+np.hstack((np.where(
-                                    	 np.diff(S_uu_sm[-10:])>=0.)[0],[9]))[0]
-    
-    v_aliasing = f_sm.size-9+np.hstack((np.where(
-                                   np.diff(S_vv_sm[-10:])>=0.)[0],[9]))[0]
-    
-    uv_aliasing = f_sm.size-9+np.hstack((np.where(
-                                         np.diff(S_uv_sm[-10:])>=0.)[0],[9]))[0]
+    return u_normalization_params[0],u_normalization_params[1],\
+        v_normalization_params[1],uv_normalization_params[1],\
+        u_normalization_params[2],v_normalization_params[2],\
+        uv_normalization_params[2]
 
-    return f_sm,S_uu_sm,S_vv_sm,S_uv_sm,u_aliasing,v_aliasing,uv_aliasing
 
 
 def calc_ref_spectra(reduced_freq,a,b,c,d,e):
@@ -601,3 +541,39 @@ def calc_z0(u_mean,heights,d0=0.,sfc_height=120.,BL_height=600.):
         err = np.nan
     
     return z0, err
+
+def calc_normalization_params(freqs, transform, t, height, mean_x, sdev_x, 
+                              num_data_points):
+    """ Calculate the normalized Fourier transform and frequency for the 
+    Fourier transform of x
+    Warning: A previous code version normalized segments, while this version 
+    normalizes the entire data set at once. The previous version also included 
+    a smoothing algorithm, which has been omitted for simplicity.
+    @parameter: freqs, type = list or np.array
+    @parameter: transform, type = list or np.array - this is the non-normalized
+                                                     Fourier transform
+    @parameter: t, type = float - this is time
+    @parameter: height, type = float - z in the Timeseries object
+    @parameter: mean_x, type = float - the mean of the parameter of the Fourier
+                                       transform F(x)
+    @parameter: sdev_x, type = float - the standard deviation of x
+    @parameter: num_data_points, type = int - the number of elements in x 
+                                              before the transform was found"""   
+
+    ## DISCRETE SPECTRA
+    transform = transform/num_data_points
+
+
+    E = transform ** 2
+    S = E * len(t)*(t[1]-t[0])
+   
+    ##  REDUCED FREQUENCY (PLOT and reference spectra)
+    reduced_freq = np.abs(freqs*height/mean_x)
+    reduced_transform = np.abs(np.meshgrid(S[0], freqs)[0]*S/sdev_x**2)
+
+    ##  ALIASING
+    aliasing = reduced_freq.size - 9 + \
+               np.hstack((np.where(np.diff(
+                          reduced_transform[-10:])>=0.)[0],[9]))[0]
+    
+    return reduced_transform, reduced_freq, aliasing

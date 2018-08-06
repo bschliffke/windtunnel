@@ -1,13 +1,13 @@
 import numpy as np
 import logging
 import os
+import pandas as pd
 import windtunnel as wt
-
 
 logger = logging.getLogger()
 __all__ = ['Timeseries_nc']
 
-class Timeseries_nc():
+class Timeseries_nc(pd.DataFrame):
     """ Timeseries is a class that holds data collected by the BSA software in
     non-coincidence mode using the standard BSA software output. The class can
     hold die raw timeseries, the corresponding wtref, the components and 
@@ -23,16 +23,21 @@ class Timeseries_nc():
     @parameter: z, type = float
     @parameter: t_arr, type = np.array
     @parameter: t_transit, type = np.array"""
-    def __init__(self,comp_1,comp_2,x=None,y=None,z=None,t_arr=None,
-                 t_transit=None):
+    def __init__(self,comp_1,comp_2,x=None,y=None,z=None,t_arr_1=None,
+                 t_transit_1=None,t_arr_2=None,t_transit_2=None):
         """ Initialise Timerseries_nc() object. """
+        super().__init__()
+
+        self['t_arr_1'] = pd.Series(data=t_arr_1)
+        self['t_arr_2'] = pd.Series(data=t_arr_2)                                  
+        self['comp_1'] = pd.Series(data=comp_1,index = self['t_arr_1'])
+        self['comp_2'] = pd.Series(data=comp_2,index = self['t_arr_2'])
+        
         self.x = x
         self.y = y
         self.z = z
-        self.t_arr = t_arr
-        self.t_transit = t_transit
-        self.comp_1 = comp_1
-        self.comp_2 = comp_2
+        self.t_transit_1 = t_transit_1
+        self.t_transit_2 = t_transit_2
         self.weighted_u_mean = None
         self.weighted_v_mean = None
         self.weighted_u_var = None
@@ -140,9 +145,11 @@ class Timeseries_nc():
     def equidistant(self):
         """ Create equidistant time series. """
         self.t_eq = np.linspace(self.t_arr[0],self.t_arr[-1],len(self.t_arr))
-        self.comp_1 = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_1)
-        self.comp_2 = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_2)
+        self.comp_1[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_1)
+        self.comp_2[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.comp_2)
 
+        self.index = self.t_eq
+        
     def mask_outliers(self,std_mask=5.):
         """ Mask outliers and print number of outliers. std_mask specifies the
         threshold for a value to be considered an outlier. 5 is the default
