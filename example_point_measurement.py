@@ -8,13 +8,13 @@ import windtunnel as wt
 # The PointConcentration class returns a DataFrame, using the standard
 # measurement txt-file output as input. The columns in the input file
 # are expected to be time, wtref, slow FID, fast ID, release signal and
-# open_rate.
+# open_rate, where release signal will be ignored.
 
 # Path to your data
-path = '//ewtl2/work/Benyamin/conti release/matlab concentration measurements/comparison_cont/input/'
+path = '/path/to/your/data'
 
 # Name of your measurement
-namelist = ['S2_P001_C_01','S2_P001_C_02','S2_P001_C_03']
+namelist = ['your_measurement']
 
 # Initialise dict object to store instances of PuffConcentration.
 # If you only have one file to analyse you can remove the loops
@@ -61,4 +61,3 @@ for name in namelist:
         conc_ts[name][file].save2file_ms(file)
         # Save average values. Requires to_full_scale()
         conc_ts[name][file].save2file_avg(file)
-

@@ -27,7 +27,7 @@ conc_ts.fromkeys(namelist)
 data_dict = {}
 data_dict.fromkeys(namelist)
 for name in namelist:
-    files = wt.get_files(path,name)
+    files = wt.get_files(path, name)
     conc_ts[name] = {}
     conc_ts[name].fromkeys(files)
     for file in files:
@@ -61,11 +61,10 @@ for name in namelist:
         conc_ts[name][file].save2file(file)
         # Save DataFrame to excel file
         writer = pd.ExcelWriter(path + 'test.xlsx')
-        results.to_excel(writer,sheet_name='Puff Test')
+        results.to_excel(writer, sheet_name='Puff Test')
 
-# Preliminary hist plots of the results DataFrame. For better
-# hist plots use wt.plot_hist().
-plt.figure(0)     
+# Preliminary hist plots of the results DataFrame.
+plt.figure(0)
 results['peak concentration'].plot.hist(title='Peak Concentration')
 plt.figure(1)
 results['peak time'].plot.hist(title='Peak Time')

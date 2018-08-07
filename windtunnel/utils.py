@@ -35,6 +35,7 @@ __all__ = [
     'transit_time_weighted_mean',
     'transit_time_weighted_var',
     'transit_time_weighted_flux',
+    'get_percentiles',
 ]
 
 def find_block(indata, length, tolerance):    
@@ -434,3 +435,25 @@ def transit_time_weighted_flux(transit_time,component_1,component_2):
                            transit_time_sum
 
     return float(weighted_flux)
+
+
+def get_percentiles(data_dict, percentile_list):
+    """ Get percentiles from each entry in data_dict specified in
+    percentile_list. Returns a dictionary with the results.
+    @parameter: data_dict, type = dict
+    @parameter: percentile_list, type = list """
+
+    # Generate namelist from dict keys
+    namelist = list(data_dict.keys())
+
+    percentile_dict = {}
+    percentile_dict.fromkeys(namelist)
+
+    for name in namelist:
+        percentile_dict[name] = {}
+        for percentile in percentile_list:
+            percentile_dict[name][percentile] = np.percentile(
+                data_dict[name],
+                percentile)
+
+    return percentile_dict
