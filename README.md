@@ -1,11 +1,11 @@
 # windtunnel
-Python package for use with BSA software output.
+Python package for use with output from flow and/or concentration windtunnel measurements.
 
 # Basics
 The package has three branches. utils, stats and plots. utils contains utility and support functions for windtunnel timeseries analysis. stats contains functions to calculate turbulence quantities of timeseries' and basic statistical analysis tools. plots has two sub-branches, one for boundary layer analysis (bl) and one containing a few useful plotting tools (tools). The log file is saved to the working directory.
 
 # The Timeseries class
-The class Timeseries, seperate from the three branches, holds the raw timeseries with all attributes of the class being defining quantities related to each timeseries (coordinates, wtref, mean wind magnitude, mean wind direction, the measured wind components with their respective timeseries, as well as a transit time weighted mean and variance). Timeseries includes methods to read data, make the timeseries equisitant, nondimensionalise the timeseries, adapt the scale, mask outliers and calculate wind magnitude and wind direction from the components given. It is also possible to save the manipulated raw timeseries of a Timeseries object.
+The class Timeseries, seperate from the three branches, holds the raw timeseries with all attributes of the class being defining quantities related to each timeseries (coordinates, wtref, mean wind magnitude, mean wind direction, the measured wind components with their respective timeseries, as well as a transit time weighted mean and variance). The class expects data in the standard BSA software output format. Timeseries inherits from pandas.DataFrame, thus it has all the same funcionality as DataFrame on top of its more specific windtunnel methods. Timeseries includes methods to read data, make the timeseries equisitant, nondimensionalise the timeseries, adapt the scale, mask outliers and calculate wind magnitude and wind direction from the components given. It is also possible to save the manipulated raw timeseries of a Timeseries object.
 
 # Example of intended use (Timeseries class)
 ```
