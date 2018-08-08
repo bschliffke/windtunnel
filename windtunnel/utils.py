@@ -2,7 +2,7 @@
 """ Utilities for basic boundary layer analysis and time series manipulation.
 """
 import numpy as np
-from scipy.spatial import KDTree as kdt
+from scipy.interpolate import interp1d
 from skimage.measure import label
 import pandas as pd
 import fnmatch
@@ -61,15 +61,13 @@ def equ_dist_ts(arrival_time,eq_dist_array,data):
    @parameter: eq_dist_array, type = np.array
    @parameter: data, type = np.array"""
    
-   mask = ~np.isnan(data)
-   data = data[mask]
-   valid = np.arange(data.size)
+   valid = ~np.isnan(data)
    
-   tt = kdt(list(zip(arrival_time[valid],np.zeros(arrival_time[valid].size))))
-   eq_tt = list(zip(eq_dist_array,np.zeros(eq_dist_array.size)))
-   eq_tt = tt.query(eq_tt)[1]
-   eq_data = data[valid][ eq_tt ]
-   return eq_data
+   f = interp1d(arrival_time[valid], data[valid],
+                kind='nearest',
+                fill_value='extrapolate')
+   
+   return f(eq_dist_array)
 
 
 def trunc_at(string, delimiter, n=3):

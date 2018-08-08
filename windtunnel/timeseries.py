@@ -21,19 +21,22 @@ class Timeseries(pd.DataFrame):
     @parameter: y, type = float
     @parameter: z, type = float
     @parameter: t_arr, type = np.array
-    @parameter: t_transit, type = np.array"""
-    def __init__(self,u,v,x=None,y=None,z=None,t_arr=None,t_transit=None):
+    @parameter: t_transit, type = np.array
+    @parameter: tau, type = int or float - time scale in milliseconds"""
+    def __init__(self,u,v,x=None,y=None,z=None,t_arr=None,t_transit=None,
+                 tau=10000):
         """ Initialise Timerseries() object. """
         super().__init__()
-                                  
-        self['u'] = pd.Series(data=u)
-        self['v'] = pd.Series(data=v)
-        
         self.x = x
         self.y = y
         self.z = z
         self.t_arr = t_arr
         self.t_transit = t_transit
+        self['u'] = u
+        self.u_unmasked = u
+        self['v'] = v
+        self.v_unmasked = v
+        self.tau = tau # time scale in milliseconds
         self.weighted_u_mean = None
         self.weighted_comp_2_mean = None
         self.weighted_u_var = None
@@ -43,7 +46,9 @@ class Timeseries(pd.DataFrame):
         self.t_eq = None
         self.magnitude = None
         self.direction = None
-
+        self.u1 = None
+        self.v1 = None
+        
     def __repr__(self):
         """ Return the x, y and z coordinate of the Timeseries object. """
         return 'Timeseries(x={x}, y={y}, z={z})'.format(x=self.x,
@@ -69,7 +74,11 @@ class Timeseries(pd.DataFrame):
         t_arr, t_transit, u, v = np.genfromtxt(filename,usecols=(1,2,3,4),
                                                skip_header=6,unpack=True)
 
-        return cls(u,v,x,y,z,t_arr,t_transit)
+        ret = cls(u,v,x,y,z,t_arr,t_transit)
+
+        ret.calc_equidistant_timesteps()
+
+        return ret
 
     def get_wtref(self,wtref_path,filename,index=0,vscale=1.):
         """Reads wtref-file selected by the time series name 'filename' and
@@ -81,7 +90,8 @@ class Timeseries(pd.DataFrame):
         @parameter: index, type = int
         @parameter: vscale, type = float """
 
-        wtreffile = wtref_path + filename + '_wtref.txt'.format(filename.split('.')[0])
+        wtreffile = wtref_path + filename + '_wtref.txt'.format(
+                                                        filename.split('.')[0])
         try:
             all_wtrefs = np.genfromtxt(wtreffile,usecols=(3),skip_header=1)
         except OSError:
@@ -121,11 +131,11 @@ class Timeseries(pd.DataFrame):
         self.z = self.z * self.scale/1000           #[m]
         self.t_arr = self.t_arr * self.scale/1000   #[s]
 
-    def equidistant(self):
+    def calc_equidistant_timesteps(self):
         """ Create equidistant time series. """
         self.t_eq = np.linspace(self.t_arr[0],self.t_arr[-1],len(self.t_arr))
-        self.u[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.u)
-        self.v[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.v)
+        self.u[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.u.values)
+        self.v[:] = wt.equ_dist_ts(self.t_arr,self.t_eq,self.v.values)
         
         self.index = self.t_eq
 
@@ -138,8 +148,10 @@ class Timeseries(pd.DataFrame):
         v_size = np.size(self.v)
 
         # Mask outliers
-        u_mask = self.u<(std_mask*np.std(self.u)+np.mean(self.u))
-        v_mask = self.v<(std_mask*np.std(self.v)+np.mean(self.v))
+        u_mask = np.asarray(self.u)<(std_mask*np.std(np.asarray(self.u))+
+                            np.mean(np.asarray(self.u)))
+        v_mask = np.asarray(self.v)<(std_mask*np.std(np.asarray(self.v))+
+                            np.mean(np.asarray(self.v)))
         mask = np.logical_and(u_mask, v_mask)
 
         self.u = self.u[mask]
@@ -176,7 +188,7 @@ class Timeseries(pd.DataFrame):
         # Calculate equivalent angles for all directions greater than 180
         i = 0
         while (i < len(ret)):
-            angle = self.direction[i]
+            angle = self.direction.iloc[i]
             if(angle > 180):
                 ret[i] = angle - 360
             else:
@@ -184,6 +196,53 @@ class Timeseries(pd.DataFrame):
             i += 1
             
         return ret
+
+    def set_tau(self, milliseconds):
+        """ Give tau a new value """
+        self.tau = milliseconds
+
+    def calc_perturbations(self):
+        """ Calculates u' and v' relative to the mean of each tau-long data 
+        segment """
+        start = 0
+        i = 0
+        j = 0
+        
+        self.u1 = []
+        self.v1 = []
+        
+        while(i < len(self.t_eq)):
+            if(self.t_eq[i] > self.t_eq[start] + self.tau):
+                stop = i
+                break
+            i += 1
+        
+        while(True):
+            
+            # find index 'stop' of end of time segment
+            while(i < len(self.t_eq)):
+                if(self.t_eq[i] > self.t_eq[start] + self.tau):
+                    stop = i
+                    break
+                i += 1
+            
+            # isolate the segment to be worked with. If the time measured is
+            # not evenly divisible by tau, the last partial segment will be
+            # discarded.
+            try:
+                u_seg = self.u[start : stop]
+                v_seg = self.v[start : stop]
+            except Exception:
+                return
+            
+            # find the segment mean of each component
+            u_mean = np.mean(u_seg)
+            v_mean = np.mean(v_seg)
+            
+            while (j < len(self.t_eq) and self.t_eq[i] < stop):
+                self.u1.append(self.u.iloc[j] - u_mean)
+                self.v1.append(self.v.iloc[j] - v_mean)
+                j += 1
 
     @property
     def weighted_component_mean(self):

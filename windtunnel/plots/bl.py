@@ -21,6 +21,8 @@ __all__ = [
     'plot_convergence',
     'plot_JTFA_STFT',
     'plot_wind_dir_hist',
+    'plot_stdevs',
+    'plot_perturbation_rose',
 ]
 
 def plot_wrapper(x, y, lat=False, ax=None, **kwargs):
@@ -754,12 +756,113 @@ def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v',
     
     return fig
 
-def plot_wind_dir_hist(timeseriesObj):
+def plot_wind_dir_hist(data,heights):
     """ Simple wind direction histogram plot
     @parameter: Timeseries
     """
-
+    
     wt.plots.plot_hist(timeseriesObj.wind_direction_mag_less_180())
     plt.title('Wind direction at ' + str(timeseriesObj.z) + 'm')
     plt.xlabel('Wind direction in degrees')
     plt.ylabel('Relative Frequency')
+    
+def plot_stdevs(u_unmasked, t_eq, tau, comp = 'u'):
+    """ This method plots the spread of an array based on how many standard 
+    deviations each point is from the mean over each tau-long time period
+    @parameter: the array to be analysed
+    @parameter: the times corresponding to the array to be analysied (ms)
+    @parameter: the characteristic time scale (ms) """
+    
+    start = 0
+    i = 0
+    j = 0
+    stdevs_from_mean = np.zeros(len(t_eq))
+    
+    # Get current axis
+    ax = plt.gca()
+       
+    while(True):
+        # find index 'stop' of end of time segment
+        i = start
+        if(start > len(t_eq)):
+            h, bins = np.histogram(stdevs_from_mean, bins=6)
+            h = h * 100. / len(u_unmasked)
+            return ax.bar(bins[:-1], h)
+        while(i < len(t_eq)):
+            
+            if(t_eq[i] > t_eq[start] + tau):
+                
+                stop = i
+                break
+            i += 1
+    
+        # isolate the segment to be worked with. If the time measured is
+        # not evenly divisible by tau, the last partial segment will be
+        # discarded.
+        try:
+            u_seg = u_unmasked[start : stop]
+        except Exception:
+            h, bins = np.histogram(stdevs_from_mean, bins=6)
+            h = h * 100. / len(u_unmasked)
+            return ax.bar(bins[:-1], h)
+
+        # find the segment standard deviation
+        stdev_u = np.std(u_seg)
+        # find the segment mean
+        u_mean = np.mean(u_seg)
+        
+        while(j < len(t_eq) and t_eq[i] < stop):
+            if(np.abs(u_unmasked[j] - u_mean) > 1 * stdev_u):
+                stdevs_from_mean[j] += 1
+            if(np.abs(u_unmasked[j] - u_mean) > 2 * stdev_u):
+                stdevs_from_mean[j] += 1
+            if(np.abs(u_unmasked[j] - u_mean) > 3 * stdev_u):
+                stdevs_from_mean[j] += 1
+            if(np.abs(u_unmasked[j] - u_mean) > 4 * stdev_u):
+                stdevs_from_mean[j] += 1
+            if(np.abs(u_unmasked[j] - u_mean) > 5 * stdev_u):
+                stdevs_from_mean[j] += 1
+            if(np.abs(u_unmasked[j] - u_mean) > 6 * stdev_u):
+                stdevs_from_mean[j] += 1
+            j += 1
+        
+        start = stop
+        stop = stop + tau
+
+def plot_perturbation_rose(u1, v1, total_mag, total_direction, 
+                           bar_divider = 3000, second_comp = 'v'):
+    """ Plots a detailed wind rose using only the perturbation component of
+    the wind. Number of bars depends on bar_divider and length of u1.
+    @parameter: u1: array of u-component perturbations
+    @parameter: v1: array of second-component perturbations
+    @parameter: total_mag: array containing magnitude of wind (not perturbation)
+    @parameter: total_direction: array containing direction of wind (not perturbation)
+    @parameter: bar_divider: inversely proportional to number of bars to be plotted
+    @parameter: second_comp, type = string: the name of the second measured
+                wind component"""
+    
+    u1 = np.asarray(u1)
+    v1 = np.asarray(v1)
+    total_mag = np.asarray(total_mag)
+    total_direction = np.asarray(total_direction)
+    
+    fig, axarr = plt.subplots(1, 2, subplot_kw=dict(projection='polar'))
+    # Calculate perturbation direction
+    unit_WD = np.arctan2(v1,u1) * 180/np.pi
+    directions = (360 + unit_WD) % 360
+    
+    # Calculate perturbation magnitude
+    speeds = np.sqrt(np.power(u1, 2) + np.power(v1, 2))
+    
+    # Plot the wind rose. Method called can be found in tools.py
+    wt.plots.plotwindrose(total_mag, total_direction, len(total_mag) / 
+                          bar_divider, ax = axarr[0], left_legend = True)
+    wt.plots.plotwindrose(speeds, directions, len(u1) / 
+                          bar_divider, ax = axarr[1])
+
+    fig.suptitle('u-' + second_comp + ' plane', y = 0.8, x = 0.55)
+    axarr[0].set_title('Wind Rose', y = 1.2)
+    axarr[1].set_title('Perturbations', y = 1.2)
+
+    axarr[0].set_position([0.2, 0.125, 0.4, 0.4])
+    axarr[1].set_position([0.6, 0.125, 0.4, 0.4])
