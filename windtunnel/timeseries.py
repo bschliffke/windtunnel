@@ -182,20 +182,9 @@ class Timeseries(pd.DataFrame):
     def wind_direction_mag_less_180(self):
         """ Return the wind direction in the range -180 to +180 degrees. The 
         'direction' list is in the range 0 to 360 degrees. """
-        # Set up output array
-        ret = np.zeros(len(self.direction))
-        
-        # Calculate equivalent angles for all directions greater than 180
-        i = 0
-        while (i < len(ret)):
-            angle = self.direction.iloc[i]
-            if(angle > 180):
-                ret[i] = angle - 360
-            else:
-                ret[i] = angle
-            i += 1
-            
-        return ret
+        for i,value in enumerate(self.direction.values):
+            if value > 180:
+                self.direction.iloc[i] = value - 360
 
     def set_tau(self, milliseconds):
         """ Give tau a new value """
@@ -204,46 +193,29 @@ class Timeseries(pd.DataFrame):
     def calc_perturbations(self):
         """ Calculates u' and v' relative to the mean of each tau-long data 
         segment """
-        start = 0
-        i = 0
-        j = 0
+        u_pert = []
+        v_pert = []
         
-        self.u1 = []
-        self.v1 = []
-        
-        while(i < len(self.t_eq)):
-            if(self.t_eq[i] > self.t_eq[start] + self.tau):
-                stop = i
+        for i,value in enumerate(self.t_eq):
+            if(value > self.t_eq[0] + self.tau):
+                step_size = i
                 break
-            i += 1
         
-        while(True):
+        starts = np.arange(0,np.size(self.t_eq)-step_size,step_size)
+        stops =  np.arange(step_size,np.size(self.t_eq),step_size)
+        
+        for begin,end in zip(starts,stops):
+            u_segment = self.u[begin : end].values
+            v_segment = self.v[begin : end].values
+            u_mean = np.nanmean(u_segment)
+            v_mean = np.nanmean(u_segment)
             
-            # find index 'stop' of end of time segment
-            while(i < len(self.t_eq)):
-                if(self.t_eq[i] > self.t_eq[start] + self.tau):
-                    stop = i
-                    break
-                i += 1
-            
-            # isolate the segment to be worked with. If the time measured is
-            # not evenly divisible by tau, the last partial segment will be
-            # discarded.
-            try:
-                u_seg = self.u[start : stop]
-                v_seg = self.v[start : stop]
-            except Exception:
-                return
-            
-            # find the segment mean of each component
-            u_mean = np.mean(u_seg)
-            v_mean = np.mean(v_seg)
-            
-            while (j < len(self.t_eq) and self.t_eq[i] < stop):
-                self.u1.append(self.u.iloc[j] - u_mean)
-                self.v1.append(self.v.iloc[j] - v_mean)
-                j += 1
+            u_pert.append(u_segment - u_mean)
+            v_pert.append(v_segment - v_mean)
 
+        self.u_perturbations = [item for sublist in u_pert for item in sublist]
+        self.v_perturbations = [item for sublist in v_pert for item in sublist]
+        
     @property
     def weighted_component_mean(self):
         """ Weigh the u and v component with its transit time through the

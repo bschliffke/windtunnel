@@ -135,20 +135,20 @@ def plot_hist(data,ax=None,**kwargs):
        
     #  Calculate bin size and normalise count
     count,bins = np.histogram(data[~np.isnan(data)],
-                              bins=np.linspace(np.min(data),np.max(data),
-                              np.max([np.min([25,(int(np.max(data)-
-                                      np.min(data))+1)*5]),15])))    
+                              bins=np.linspace(np.nanmin(data),np.nanmax(data),
+                              np.max([np.nanmin([25,(int(np.nanmax(data)-
+                                      np.nanmin(data))+1)*5]),15])))    
     
     count = (count/np.size(data))*100.
     
     # Plot
-    ret = ax.bar(bins[:-1],count,width = np.mean(np.diff(bins)))
-    ticks=bins[:-1]+0.5*np.mean(np.diff(bins))
+    ret = ax.bar(bins[:-1],count,width = np.nanmean(np.diff(bins)))
+    ticks=bins[:-1]+0.5*np.nanmean(np.diff(bins))
     ax.set_xticks(ticks.round(2))
     for tick in ax.get_xticklabels():
         tick.set_rotation(55)
-    ax.set_xlim([ticks.min()-0.5*np.mean(np.diff(bins)),
-              ticks.max()+0.5*np.mean(np.diff(bins))])
+    ax.set_xlim([ticks.min()-0.5*np.nanmean(np.diff(bins)),
+              ticks.max()+0.5*np.nanmean(np.diff(bins))])
            
     ax.set_ylabel('relative Frequency [%]')
     ax.grid('on')
@@ -757,7 +757,7 @@ def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v',
     return fig
     
 def plot_stdevs(u_unmasked, t_eq, tau, comp = 'u'):
-    """ This method plots the spread of an array based on how many standard 
+    """ This function plots the spread of an array based on how many standard 
     deviations each point is from the mean over each tau-long time period
     @parameter: the array to be analysed
     @parameter: the times corresponding to the array to be analysied (ms)
@@ -801,7 +801,7 @@ def plot_stdevs(u_unmasked, t_eq, tau, comp = 'u'):
         # find the segment mean
         u_mean = np.mean(u_seg)
         
-        while(j < len(t_eq) and t_eq[i] < stop):
+        while(j < len(t_eq) and t_eq[i-1] < stop):
             if(np.abs(u_unmasked[j] - u_mean) > 1 * stdev_u):
                 stdevs_from_mean[j] += 1
             if(np.abs(u_unmasked[j] - u_mean) > 2 * stdev_u):
