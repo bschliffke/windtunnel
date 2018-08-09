@@ -253,9 +253,11 @@ class Timeseries(pd.DataFrame):
         component means."""
         
         self.weighted_u_mean = wt.transit_time_weighted_mean(
-                                                        self.t_transit,self.u)
+                                                        self.t_transit,
+                                                        self.u.dropna())
         self.weighted_v_mean = wt.transit_time_weighted_mean(
-                                                        self.t_transit,self.v)
+                                                        self.t_transit,
+                                                        self.v.dropna())
 
         return float(self.weighted_u_mean/self.wtref),\
                float(self.weighted_v_mean/self.wtref)
@@ -269,9 +271,11 @@ class Timeseries(pd.DataFrame):
         component variance."""
 
         self.weighted_u_var = wt.transit_time_weighted_var(
-                                                        self.t_transit,self.u)
+                                                        self.t_transit,
+                                                        self.u.dropna())
         self.weighted_v_var = wt.transit_time_weighted_var(
-                                                        self.t_transit,self.v)
+                                                        self.t_transit,
+                                                        self.v.dropna())
 
         return float(self.weighted_u_var/self.wtref),\
                float(self.weighted_v_var/self.wtref)

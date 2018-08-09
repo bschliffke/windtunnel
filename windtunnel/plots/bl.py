@@ -20,7 +20,6 @@ __all__ = [
     'plot_convergence_test',
     'plot_convergence',
     'plot_JTFA_STFT',
-    'plot_wind_dir_hist',
     'plot_stdevs',
     'plot_perturbation_rose',
 ]
@@ -588,6 +587,7 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None,
     ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$',
                   fontsize=18)
     
+    plt.close()
     return handles
     
 
@@ -755,16 +755,6 @@ def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v',
     plt.tight_layout()
     
     return fig
-
-def plot_wind_dir_hist(data,heights):
-    """ Simple wind direction histogram plot
-    @parameter: Timeseries
-    """
-    
-    wt.plots.plot_hist(timeseriesObj.wind_direction_mag_less_180())
-    plt.title('Wind direction at ' + str(timeseriesObj.z) + 'm')
-    plt.xlabel('Wind direction in degrees')
-    plt.ylabel('Relative Frequency')
     
 def plot_stdevs(u_unmasked, t_eq, tau, comp = 'u'):
     """ This method plots the spread of an array based on how many standard 

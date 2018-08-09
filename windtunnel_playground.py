@@ -304,7 +304,7 @@ plot_path = './plots/'
 txt_path = './postprocessed/'
 #ref_path = '/home/benny/Downloads/data/ref_data/'
 file_type = 'pdf'
-namelist = ['HC_KM_010']#['HC_BL_UW_139']  # ['HC_RZU_UV_011']['HC_LAH_UV_015']
+namelist = ['HC_BL_UW_139']  #['HC_KM_010']# ['HC_RZU_UV_011']['HC_LAH_UV_015']
 scale = 500
 # 1 = vertical profile
 # 2 = lateral profile
@@ -325,18 +325,19 @@ for name in namelist:
     time_series[name] = {}
     time_series[name].fromkeys(files)
     for i, file in enumerate(files):
-        ts = Timeseries.from_file(path + file)
+        ts = wt.Timeseries.from_file(path + file)
         ts.get_wind_comps(path + file)
         ts.get_wtref(wtref_path, name, index=i)
         ts.adapt_scale(scale)
-        ts.equidistant()
         ts.mask_outliers()
-        ts.weighted_component_mean
-        ts.weighted_component_variance
+#        ts.weighted_component_mean
+#        ts.weighted_component_variance
         ts.nondimensionalise()
-        ts.mean_magnitude
-        ts.mean_direction
-        ts.save2file(file)
+        ts.calc_direction()
+        ts.wind_direction_mag_less_180()
+        ts.calc_perturbations()
+
+#        ts.save2file(file)
         time_series[name][file] = ts
 #
 #for name in namelist:

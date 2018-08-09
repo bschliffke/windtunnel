@@ -164,8 +164,8 @@ def calc_turb_data(u_comp,v_comp):
     
     mask = mask = np.logical_and(~np.isnan(u_comp),
                           ~np.isnan(v_comp))    
-    u = u_comp[mask]
-    v = v_comp[mask]
+    u = np.asarray(u_comp[mask])
+    v = np.asarray(v_comp[mask])
     
     M = np.mean(np.sqrt(u_comp**2 +v_comp**2))
     u_mean = np.mean(u)
