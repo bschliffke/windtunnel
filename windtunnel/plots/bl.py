@@ -608,6 +608,7 @@ def plot_convergence(data_dict,ncols=3,**kwargs):
 
     return axes
 
+
 def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v', 
                    window_length = 3500, fixed_limits = (None, None), 
                    ymax = None):
@@ -755,70 +756,59 @@ def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v',
     plt.tight_layout()
     
     return fig
-    
-def plot_stdevs(u_unmasked, t_eq, tau, comp = 'u'):
+
+ 
+def plot_stdevs(data, t_eq, tau, comp='u', ax=None, **kwargs):
     """ This function plots the spread of an array based on how many standard 
     deviations each point is from the mean over each tau-long time period
-    @parameter: the array to be analysed
-    @parameter: the times corresponding to the array to be analysied (ms)
-    @parameter: the characteristic time scale (ms) """
-    
-    start = 0
-    i = 0
-    j = 0
-    stdevs_from_mean = np.zeros(len(t_eq))
-    
+    @parameter: data, type = np.array (the array to be analysed)
+    @parameter: t_eq, type = np.array (corresponding times steps in [ms])
+    @parameter: tau, type = int or float (characteristic time scale (ms)
+    @parameter: ax, axis passed to function
+    @parameter **kwargs : additional keyword arguments passed to ax.bar() """
     # Get current axis
-    ax = plt.gca()
-       
-    while(True):
-        # find index 'stop' of end of time segment
-        i = start
-        if(start > len(t_eq)):
-            h, bins = np.histogram(stdevs_from_mean, bins=6)
-            h = h * 100. / len(u_unmasked)
-            return ax.bar(bins[:-1], h)
-        while(i < len(t_eq)):
-            
-            if(t_eq[i] > t_eq[start] + tau):
-                
-                stop = i
-                break
-            i += 1
+    if ax is None:
+        ax = plt.gca()
     
-        # isolate the segment to be worked with. If the time measured is
-        # not evenly divisible by tau, the last partial segment will be
-        # discarded.
-        try:
-            u_seg = u_unmasked[start : stop]
-        except Exception:
-            h, bins = np.histogram(stdevs_from_mean, bins=6)
-            h = h * 100. / len(u_unmasked)
-            return ax.bar(bins[:-1], h)
+    for i,value in enumerate(t_eq):
+        if(value > t_eq[0] + tau):
+            step_size = i
+            break
+    
+    starts = np.arange(0,np.size(t_eq)-step_size,step_size)
+    stops =  np.arange(step_size,np.size(t_eq),step_size)
+    stds_from_mean = {}
+    keys = [1,2,3,4,5,6,7]
+    stds_from_mean.fromkeys(keys)
+    for key in keys:
+        stds_from_mean[key] = 0
+                      
+    for begin,end in zip(starts,stops):
+        segment = data[begin : end]
+        mean = np.nanmean(segment)
+        std = np.std(segment)
+        for value in segment:
+            perturbation = value - mean
+            if perturbation < 1 * std:
+                stds_from_mean[1] += 1
+            if perturbation > 1 * std:
+                stds_from_mean[2] += 1
+            if perturbation > 2 * std:
+                stds_from_mean[3] += 1
+            if perturbation > 3 * std:
+                stds_from_mean[4] += 1
+            if perturbation > 4 * std:
+                stds_from_mean[5] += 1
+            if perturbation > 5 * std:
+                stds_from_mean[6] += 1
+            if perturbation > 6 * std:
+                stds_from_mean[7] += 1
+     
+    ax.bar(range(len(stds_from_mean)), list(stds_from_mean.values()),
+           align='center')
+    ax.set_xticks(range(len(stds_from_mean)), list(stds_from_mean.keys()))
 
-        # find the segment standard deviation
-        stdev_u = np.std(u_seg)
-        # find the segment mean
-        u_mean = np.mean(u_seg)
-        
-        while(j < len(t_eq) and t_eq[i-1] < stop):
-            if(np.abs(u_unmasked[j] - u_mean) > 1 * stdev_u):
-                stdevs_from_mean[j] += 1
-            if(np.abs(u_unmasked[j] - u_mean) > 2 * stdev_u):
-                stdevs_from_mean[j] += 1
-            if(np.abs(u_unmasked[j] - u_mean) > 3 * stdev_u):
-                stdevs_from_mean[j] += 1
-            if(np.abs(u_unmasked[j] - u_mean) > 4 * stdev_u):
-                stdevs_from_mean[j] += 1
-            if(np.abs(u_unmasked[j] - u_mean) > 5 * stdev_u):
-                stdevs_from_mean[j] += 1
-            if(np.abs(u_unmasked[j] - u_mean) > 6 * stdev_u):
-                stdevs_from_mean[j] += 1
-            j += 1
-        
-        start = stop
-        stop = stop + tau
-
+  
 def plot_perturbation_rose(u1, v1, total_mag, total_direction, 
                            bar_divider = 3000, second_comp = 'v'):
     """ Plots a detailed wind rose using only the perturbation component of
