@@ -29,7 +29,7 @@ setup(
         'matplotlib>=1.5.1',
         'numpy>=1.10.4',
         'pandas',
-        'scipy',
+        'scipy>=0.19.1',
         'scikit-image',
     ],
 )
