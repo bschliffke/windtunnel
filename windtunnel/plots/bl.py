@@ -586,8 +586,7 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None,
     ax.set_ylabel(ylabel, fontsize=18)
     ax.set_xlabel(r'$\Delta t(wind\ tunnel)\cdot U_{0}\cdot L_{0}^{-1}$',
                   fontsize=18)
-    
-    plt.close()
+
     return handles
     
 
