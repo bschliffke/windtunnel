@@ -351,17 +351,18 @@ def calc_spectra(u_comp,v_comp,t_eq,height):
     uv_param = np.sqrt(fft_u * fft_v) # This is used in place of a true Fourier 
                                       # transform to calculate diagonal energy
     
-    u_normalization_params = calc_normalization_params(freq, fft_u, t_eq, 
+    u_normalization_params = wt.calc_normalization_params(freq, fft_u, t_eq, 
                                                        height, 
                                                        np.nanmean(u_comp), 
                                                        np.std(u_comp), 
                                                        len(u_comp))
-    v_normalization_params = calc_normalization_params(freq, fft_v, t_eq, 
+    v_normalization_params = wt.calc_normalization_params(freq, fft_v, t_eq, 
                                                        height, 
                                                        np.nanmean(v_comp), 
                                                        np.std(v_comp), 
                                                        len(v_comp))
-    uv_normalization_params = calc_normalization_params(freq, uv_param, t_eq, 
+    uv_normalization_params = wt.calc_normalization_params(freq, uv_param, 
+                                                       t_eq, 
                                                        height, 
                                                        np.nanmean(
                                                        np.sqrt(v_comp*u_comp)), 
@@ -373,7 +374,6 @@ def calc_spectra(u_comp,v_comp,t_eq,height):
         v_normalization_params[1],uv_normalization_params[1],\
         u_normalization_params[2],v_normalization_params[2],\
         uv_normalization_params[2]
-
 
 
 def calc_ref_spectra(reduced_freq,a,b,c,d,e):
@@ -569,7 +569,8 @@ def calc_normalization_params(freqs, transform, t, height, mean_x, sdev_x,
    
     ##  REDUCED FREQUENCY (PLOT and reference spectra)
     reduced_freq = np.abs(freqs*height/mean_x)
-    reduced_transform = np.abs(np.meshgrid(S[0], freqs)[0]*S/sdev_x**2)
+    reduced_transform = np.abs(np.meshgrid(S[0],
+                               freqs,sparse=True)[0]*S/sdev_x**2)
 
     ##  ALIASING
     aliasing = reduced_freq.size - 9 + \

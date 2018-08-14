@@ -478,8 +478,10 @@ def plot_spectra(f_sm, S_uu_sm, S_vv_sm, S_uv_sm, u_aliasing, v_aliasing,
     if ax is None:
         ax = plt.gca()
     
-    xsmin = min(10**-4,np.min(f_sm[np.where(f_sm>0)]))
-    xsmax = max(100,np.max(f_sm[np.where(f_sm>0)]))
+    xsmin = np.nanmin(np.nanmin(f_sm[np.where(f_sm>0)]))
+    xsmax = np.nanmax(np.nanmax(f_sm[np.where(f_sm>0)]))
+#    xsmin = np.nanmin(10**-4,np.nanmin(f_sm[np.where(f_sm>0)]))
+#    xsmax = np.nanmax(100,np.nanmax(f_sm[np.where(f_sm>0)]))
     ref_x = np.logspace(np.log10(xsmin),np.log10(xsmax),50)
     ref_specs = wt.get_reference_spectra(height,ref_path)
         
@@ -511,7 +513,7 @@ def plot_spectra(f_sm, S_uu_sm, S_vv_sm, S_uv_sm, u_aliasing, v_aliasing,
                         label=r'reference range $ww$')
 
     #ax.set_xlim(xsmin,xsmax)
-    ax.set_ylim([10**-6,10])
+    #ax.set_ylim([10**-6,10])
     ax.set_xlabel(r"$f\cdot z\cdot U^{-1}$")
     ax.set_ylabel(r"$f\cdot S_{ij}\cdot (\sigma_i\sigma_j)^{-1}$")
     ax.legend(loc='lower right',fontsize=11)
