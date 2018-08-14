@@ -46,7 +46,6 @@ for name in namelist:
         ts.get_wind_comps(path+file)
         ts.get_wtref(wtref_path,name,index=i)
         ts.adapt_scale(scale)
-        ts.equidistant()
         ts.mask_outliers()
         ts.weighted_component_mean
         ts.weighted_component_variance
@@ -86,6 +85,7 @@ spectra_data.fromkeys(namelist)
 
 for name in namelist:
     # Iniate second layer of dictionaries for results 
+    files = wt.get_files(path,name)
     wind_comps[name] = {}
     wind_comps[name].fromkeys(files)
     if mode != 3:

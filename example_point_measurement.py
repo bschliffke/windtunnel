@@ -31,7 +31,7 @@ for name in namelist:
     conc_ts[name] = {}
     conc_ts[name].fromkeys(files)
     for file in files:
-        conc_ts[name][file] = PointConcentration.from_file(path + file)
+        conc_ts[name][file] = wt.PointConcentration.from_file(path + file)
         conc_ts[name][file].ambient_conditions(x=1560,y=220,z=6,
                                                pressure=100385,
                                                temperature=22.5,

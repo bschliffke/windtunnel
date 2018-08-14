@@ -53,8 +53,8 @@ for name in namelist:
         # concentration beneath the threshold.
         conc_ts[name][file].apply_threshold_concentration()
         # Test each puff against the average puff of the
-        # measurement
-        conc_ts[name][file].check_against_avg_puff()
+        # measurement. Save the results in a variable
+        deviations = conc_ts[name][file].check_against_avg_puff()
         # Save output to a variable
         results = conc_ts[name][file].get_puff_statistics()
         # Save DataFrame to txt file

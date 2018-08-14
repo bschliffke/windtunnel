@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 
 __all__ = [
     'Windrose',
-    'plotwindrose',
+    'plot_windrose',
     'plot_DWD_windrose',
     'plot_rose',
-    'plotpdfs',
-    'plotpdfs_err',
-    'plotcdfs',
+    'plot_pdfs',
+    'plot_pdfs_err',
+    'plot_cdfs',
 ]
 
 class Windrose:
@@ -33,7 +33,7 @@ class Windrose:
         return self.wdir,np.array(self.ws)
     
     
-def plotwindrose(inFF,inDD, num_bars = 10, ax = None, left_legend = False):
+def plot_windrose(inFF,inDD, num_bars = 10, ax = None, left_legend = False):
     """ Plots windrose with dynamic velocity classes of each 10% percentile and
     10 degree classes for directional data. The representation of the windrose 
     in this function is more detailed than in plot_DWD_windrose().
@@ -196,7 +196,7 @@ def plot_rose(inFF,inDD,ff_steps,dd_range):
     plt.show()
     
 
-def plotpdfs(sets,lablist,ax=None, **kwargs):
+def plot_pdfs(sets,lablist,ax=None, **kwargs):
     """Plots PDFs of data in sets using the respective labels from lablist.
     @parameter sets: iterable set of data
     @parameter lablist: list of strings
@@ -221,7 +221,7 @@ def plotpdfs(sets,lablist,ax=None, **kwargs):
     return ret
 
 
-def plotpdfs_err(sets,lablist,error,ax=None, **kwargs):
+def plot_pdfs_err(sets,lablist,error,ax=None, **kwargs):
     """Plots PDFs of data in sets using the respective labels from lablist with
     a given margin of error.
     @parameter sets: iterable set of data
@@ -252,7 +252,7 @@ def plotpdfs_err(sets,lablist,error,ax=None, **kwargs):
     
     return ret
 
-def plotcdfs(sets, lablist, ax=None, **kwargs):
+def plot_cdfs(sets, lablist, ax=None, **kwargs):
     """Plots CDFs of data in sets using the respective labels from lablist
     @parameter sets: iterable set of data
     @parameter lablist: list of strings

@@ -834,9 +834,9 @@ def plot_perturbation_rose(u1, v1, total_mag, total_direction,
     speeds = np.sqrt(np.power(u1, 2) + np.power(v1, 2))
     
     # Plot the wind rose. Method called can be found in tools.py
-    wt.plots.plotwindrose(total_mag, total_direction, len(total_mag) / 
+    wt.plots.plot_windrose(total_mag, total_direction, len(total_mag) / 
                           bar_divider, ax = axarr[0], left_legend = True)
-    wt.plots.plotwindrose(speeds, directions, len(u1) / 
+    wt.plots.plot_windrose(speeds, directions, len(u1) / 
                           bar_divider, ax = axarr[1])
 
     fig.suptitle('u-' + second_comp + ' plane', y = 0.8, x = 0.55)
