@@ -52,6 +52,44 @@ def get_ratio_referencedata():
     # ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
     # TODO: finish this with new ref data
 
+def calc_normalization_params(freqs, transform, t, height, mean_x, sdev_x, 
+                              num_data_points):
+    """ Calculate the normalized Fourier transform and frequency for the 
+    Fourier transform of x
+    Warning: A previous code version normalized segments, while this version 
+    normalizes the entire data set at once. The previous version also included 
+    a smoothing algorithm, which has been omitted for simplicity.
+    @parameter: freqs, type = list or np.array
+    @parameter: transform, type = list or np.array - this is the non-normalized
+                                                     Fourier transform
+    @parameter: t, type = float - this is time
+    @parameter: height, type = float - z in the Timeseries object
+    @parameter: mean_x, type = float - the mean of the parameter of the Fourier
+                                       transform F(x)
+    @parameter: sdev_x, type = float - the standard deviation of x
+    @parameter: num_data_points, type = int - the number of elements in x 
+                                              before the transform was found"""   
+
+    ## DISCRETE SPECTRA
+    transform = transform/num_data_points
+
+    E = transform ** 2
+    S = E * len(t)*(t[1]-t[0])
+   
+    ##  REDUCED FREQUENCY (PLOT and reference spectra)
+    reduced_freq = np.abs(freqs*height/mean_x)
+    reduced_transform = np.abs(np.meshgrid(S[0],
+                               freqs,sparse=True)[0]*S/sdev_x**2)
+    reduced_transform = reduced_transform[0]
+
+    ##  ALIASING
+    aliasing = reduced_freq.size - 9 + \
+               np.hstack((np.where(np.diff(
+                          reduced_transform[-10:])>=0.)[0],[9]))[0]
+    
+    return reduced_transform, reduced_freq, aliasing
+
+
 # %%#
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
@@ -92,11 +130,27 @@ for name in namelist:
 #        ts.weighted_component_variance
         ts.nondimensionalise()
         ts.calc_direction()
-        ts.wind_direction_mag_less_180()
+#        ts.wind_direction_mag_less_180()
         ts.calc_perturbations()
 
 #        ts.save2file(file)
         time_series[name][file] = ts
+
+#freq = np.fft.fftfreq(np.size(ts.u.dropna().values),ts.t_eq[1]-ts.t_eq[0])
+#
+### FFT
+#fft_u = np.fft.fft(ts.u.dropna().values)*1./np.size(ts.u.dropna().values)        #  normalized fft
+#fft_v = np.fft.fft(ts.v.dropna().values)*1./np.size(ts.v.dropna().values) 
+#uv_param = np.sqrt(fft_u * fft_v) # This is used in place of a true Fourier 
+#                                  # transform to calculate diagonal energy
+#
+#u_normalization_params = calc_normalization_params(freq, fft_u, ts.t_eq, 
+#                                                   ts.z, 
+#                                                   np.nanmean(ts.u.dropna().values), 
+#                                                   np.std(ts.u.dropna().values), 
+#                                                   len(ts.u.dropna().values))
+#%%#
+
 
 for name in namelist:
     files = wt.get_files(path, name)
@@ -287,7 +341,7 @@ for name in namelist:
 
             # Plot spectra
             plt.figure(files.index(file) + 400)
-            wt.plots.plot_spectra(spectra_data[name][file][0][0],
+            wt.plots.plot_spectra(spectra_data[name][file][0],
                                   spectra_data[name][file][1],
                                   spectra_data[name][file][2],
                                   spectra_data[name][file][3],

@@ -122,7 +122,7 @@ def plot_DWD_windrose(inFF,inDD):
     dd = dd*np.pi/180.
     
     ##  PLOT
-    width = (2*np.pi) / dd_range
+    width = dd_range*np.pi/180.
     cmap = plt.cm.jet
     ax = plt.subplot(111,polar=True)
     ax.bar(dd, ff[:,0],
@@ -164,10 +164,10 @@ def plot_rose(inFF,inDD,ff_steps,dd_range):
     
     ##  DATA PROCESSING
     dd,ff = Windrose(inDD,inFF).pack(dd_range,ff_steps)
-    dd = dd*np.pi/180.
+    #dd = dd*np.pi/180.
     
     ##  PLOT
-    width = (2*np.pi) / dd_range
+    width = dd_range*np.pi/180.
     cmap = plt.cm.jet
     ax = plt.subplot(111,polar=True)
     ax.bar(dd, ff[:,0],
