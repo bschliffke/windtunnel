@@ -4,6 +4,8 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import windtunnel as wt
+import plotly.plotly as py
+import plotly.graph_objs as go
 
 # Create logger
 logger = logging.getLogger()
@@ -52,42 +54,26 @@ def get_ratio_referencedata():
     # ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
     # TODO: finish this with new ref data
 
-def calc_normalization_params(freqs, transform, t, height, mean_x, sdev_x, 
-                              num_data_points):
-    """ Calculate the normalized Fourier transform and frequency for the 
-    Fourier transform of x
-    Warning: A previous code version normalized segments, while this version 
-    normalizes the entire data set at once. The previous version also included 
-    a smoothing algorithm, which has been omitted for simplicity.
-    @parameter: freqs, type = list or np.array
-    @parameter: transform, type = list or np.array - this is the non-normalized
-                                                     Fourier transform
-    @parameter: t, type = float - this is time
-    @parameter: height, type = float - z in the Timeseries object
-    @parameter: mean_x, type = float - the mean of the parameter of the Fourier
-                                       transform F(x)
-    @parameter: sdev_x, type = float - the standard deviation of x
-    @parameter: num_data_points, type = int - the number of elements in x 
-                                              before the transform was found"""   
 
-    ## DISCRETE SPECTRA
-    transform = transform/num_data_points
-
-    E = transform ** 2
-    S = E * len(t)*(t[1]-t[0])
-   
-    ##  REDUCED FREQUENCY (PLOT and reference spectra)
-    reduced_freq = np.abs(freqs*height/mean_x)
-    reduced_transform = np.abs(np.meshgrid(S[0],
-                               freqs,sparse=True)[0]*S/sdev_x**2)
-    reduced_transform = reduced_transform[0]
-
-    ##  ALIASING
-    aliasing = reduced_freq.size - 9 + \
-               np.hstack((np.where(np.diff(
-                          reduced_transform[-10:])>=0.)[0],[9]))[0]
+def plot_rose(magnitude,directions,mag_steps,dir_steps):#inFF,inDD,ff_steps,dd_range):
+    np.random.seed(19680801)
+    # Compute pie slices
+    #N = 20
+    bins = np.arange(0,360,dir_steps)
+    inds = np.argsort(directions)
+    theta = directions[inds]#np.linspace(0.0, 2 * np.pi, N, endpoint=False)
+    radii = magnitude[inds]#10 * np.random.rand(N)
+    width = dir_steps #np.pi / 4 * np.random.rand(N)
     
-    return reduced_transform, reduced_freq, aliasing
+    ax = plt.subplot(111, projection='polar')
+    bars = ax.bar(theta, radii, width=width, bottom=0.0)
+    
+    # Use custom colors and opacity
+    for r, bar in zip(radii, bars):
+        bar.set_facecolor(plt.cm.viridis(r / 10.))
+        bar.set_alpha(0.5)
+    
+    plt.show()
 
 
 # %%#
@@ -130,28 +116,13 @@ for name in namelist:
 #        ts.weighted_component_variance
         ts.nondimensionalise()
         ts.calc_direction()
+        ts.calc_magnitude()
 #        ts.wind_direction_mag_less_180()
         ts.calc_perturbations()
-
 #        ts.save2file(file)
-        time_series[name][file] = ts
+#        time_series[name][file] = ts
 
-#freq = np.fft.fftfreq(np.size(ts.u.dropna().values),ts.t_eq[1]-ts.t_eq[0])
-#
-### FFT
-#fft_u = np.fft.fft(ts.u.dropna().values)*1./np.size(ts.u.dropna().values)        #  normalized fft
-#fft_v = np.fft.fft(ts.v.dropna().values)*1./np.size(ts.v.dropna().values) 
-#uv_param = np.sqrt(fft_u * fft_v) # This is used in place of a true Fourier 
-#                                  # transform to calculate diagonal energy
-#
-#u_normalization_params = calc_normalization_params(freq, fft_u, ts.t_eq, 
-#                                                   ts.z, 
-#                                                   np.nanmean(ts.u.dropna().values), 
-#                                                   np.std(ts.u.dropna().values), 
-#                                                   len(ts.u.dropna().values))
 #%%#
-
-
 for name in namelist:
     files = wt.get_files(path, name)
     # Check if positions in all files match for vertical profile

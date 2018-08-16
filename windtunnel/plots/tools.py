@@ -167,7 +167,7 @@ def plot_rose(inFF,inDD,ff_steps,dd_range):
     #dd = dd*np.pi/180.
     
     ##  PLOT
-    width = dd_range*np.pi/180.
+    width = dd_range#*np.pi/180.
     cmap = plt.cm.jet
     ax = plt.subplot(111,polar=True)
     ax.bar(dd, ff[:,0],

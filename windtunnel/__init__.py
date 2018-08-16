@@ -10,6 +10,7 @@ from .flow.stats import *
 from . import plots
 from .timeseries import *
 from .timeseries_nc import *
+from .PointConcentration import *
 
 # set standards for Logging module
 logging.basicConfig(level=logging.DEBUG,
