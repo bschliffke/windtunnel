@@ -220,9 +220,9 @@ def calc_lux_data(dt,u_comp):
     if np.size(u_comp) < 5:
         raise Exception('Too few value to estimate Lux!')
 
-    mask = np.where(~np.isnan(u_comp))
+    mask = np.where(~np.isnan(u_comp.values))
     
-    u = u_comp[mask]
+    u = u_comp.values[mask]
 
     lag_eq = np.arange(1,np.size(u)+1) * dt# array of time lags
     u_eq_acorr = calc_acorr(u,np.size(u))# autocorrelation (one sided) of time 

@@ -201,7 +201,7 @@ def plot_pdfs(sets,lablist,ax=None, **kwargs):
     @parameter sets: iterable set of data
     @parameter lablist: list of strings
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
+    @parameter kwargs : additional keyword arguments passed to plt.plot()"""
     if ax is None:
        ax = plt.gca()
         
@@ -228,7 +228,7 @@ def plot_pdfs_err(sets,lablist,error,ax=None, **kwargs):
     @parameter lablist: list of strings
     @parameter error: int or float
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
+    @parameter kwargs : additional keyword arguments passed to plt.plot()"""
     if ax is None:
        ax = plt.gca()
         
@@ -257,7 +257,7 @@ def plot_cdfs(sets, lablist, ax=None, **kwargs):
     @parameter sets: iterable set of data
     @parameter lablist: list of strings
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
+    @parameter kwargs : additional keyword arguments passed to plt.plot()"""
     if ax is None:
         ax = plt.gca()
         

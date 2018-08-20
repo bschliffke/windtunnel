@@ -79,7 +79,7 @@ def trunc_at(string, delimiter, n=3):
 
 def get_files(path, filename):
     """Finds files with filename in path as specified. Filename supports the
-    Unix shell-style wildcards (*,?,[seq],[!seq])
+    Unix shell-style wildcards.
     @parameter: path, type = string
     @parameter: filename, type = string """
     

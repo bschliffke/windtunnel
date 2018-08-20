@@ -15,7 +15,7 @@ def plot_boxplots(data_dict, ylabel=None, **kwargs):
     @parameters: data, type = dict
     @parameters: ylabel, type = string
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.boxplot()
+    @parameter kwargs : additional keyword arguments passed to plt.boxplot()
     """
     # Set standard ylabel if none is specified
     if ylabel is None:

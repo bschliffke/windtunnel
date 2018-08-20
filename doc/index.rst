@@ -1,14 +1,24 @@
 .. windtunnel documentation master file, created by
-   sphinx-quickstart on Wed Feb  7 16:27:17 2018.
+   sphinx-quickstart on Wed Aug  8 15:49:32 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-windtunnel documentation
-========================
-
-A collection of tools for boundary layer analysis with Python 3.
+Welcome to windtunnel's documentation!
+======================================
+A collection of tools for basic boundary layer and concentration measurements analysis with Python 3.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
-   modules.rst
+windtunnel
+==========
+
+.. automodule:: windtunnel
+   :members:
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

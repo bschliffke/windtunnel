@@ -180,11 +180,11 @@ class Timeseries(pd.DataFrame):
         self.direction = (360 + unit_WD) % 360
                          
     def wind_direction_mag_less_180(self):
-        """ Return the wind direction in the range -180 to +180 degrees. The 
-        'direction' list is in the range 0 to 360 degrees. """
-        for i,value in enumerate(self.direction.values):
+        """ Return the wind direction in the range -180 to +180 degrees. """
+        for i, value in enumerate(self.direction.values):
             if value > 180:
                 self.direction.iloc[i] = value - 360
+
 
     def set_tau(self, milliseconds):
         """ Give tau a new value """
@@ -203,7 +203,7 @@ class Timeseries(pd.DataFrame):
         
         starts = np.arange(0,np.size(self.t_eq)-step_size,step_size)
         stops =  np.arange(step_size,np.size(self.t_eq),step_size)
-        
+
         for begin,end in zip(starts,stops):
             u_segment = self.u[begin : end].values
             v_segment = self.v[begin : end].values
@@ -215,7 +215,7 @@ class Timeseries(pd.DataFrame):
 
         self.u_perturbations = [item for sublist in u_pert for item in sublist]
         self.v_perturbations = [item for sublist in v_pert for item in sublist]
-        
+
     @property
     def weighted_component_mean(self):
         """ Weigh the u and v component with its transit time through the

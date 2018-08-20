@@ -30,7 +30,7 @@ def plot_wrapper(x, y, lat=False, ax=None, **kwargs):
     @parameter: y, type = list or np.array
     @parameter: lat, type = boolean
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.errorbar()
+    @parameter kwargs : additional keyword arguments passed to plt.errorbar()
     """
     if ax is None:
         ax = plt.gca()
@@ -56,7 +56,7 @@ def plot_scatter(x,y,std_mask=5.,ax=None,**kwargs):
     @parameter: y, type = list or np.array
     @parameter: std_mask, float
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.scatter()
+    @parameter kwargs : additional keyword arguments passed to plt.scatter()
     """
     # Get current axis
     if ax is None:
@@ -91,7 +91,7 @@ def plot_scatter_wght(transit_time,x,y,std_mask=5.,ax=None,**kwargs):
     @parameter: y, type = list or np.array
     @parameter: std_mask, float
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.scatter()
+    @parameter kwargs : additional keyword arguments passed to plt.scatter()
     """
     # Get current axis
     if ax is None:
@@ -127,7 +127,7 @@ def plot_hist(data,ax=None,**kwargs):
     """Creates a scatter plot of x and y.
     @parameter: data, type = list or np.array
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     
     # Get current axis
     if ax is None:
@@ -168,12 +168,13 @@ def plot_turb_int(data,heights,yerr=0,component='I_u',lat=False,
     @parameter: lat, type = boolean
     @parameter: ref_path, type = string
     @parameter: ax, axis passed to function    
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
-       
-    slight,moderate,rough,very_rough = wt.get_turb_referencedata(component,
-                                                                 ref_path)
+
+    if lat == False:
+        slight,moderate,rough,very_rough = wt.get_turb_referencedata(component,
+                                                                     ref_path)
     ret = []
     for turb_int, height in zip(data, heights):  
         if lat == False:
@@ -230,7 +231,7 @@ def plot_fluxes(data, heights, yerr=0, component='v', lat=False, ax=None,
     @parameter: component, type = string
     @parameter: lat, type = boolean
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
         ax = plt.gca()
     
@@ -282,7 +283,7 @@ def plot_fluxes_log(data, heights, yerr=0, component='v', ax=None, **kwargs):
     @parameter: yerr, type = int or float
     @parameter: component, type = string
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
 
@@ -325,7 +326,7 @@ def plot_winddata(mean_magnitude, u_mean, v_mean, heights, yerr=0, lat=False,
     @parameter: yerr, type = int or float
     @parameter: lat, type = boolean
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
        
@@ -385,7 +386,7 @@ def plot_winddata_log(mean_magnitude,u_mean,v_mean,heights,yerr=0,ax=None,
     @parameter: heights, type = list or np.array
     @parameter: yerr, type = int or float
     @parameter: ax, axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
     
@@ -421,12 +422,14 @@ def plot_lux(Lux, heights, err=0, lat=False, ref_path=None, ax=None,
     @parameter: lat, type = boolean
     @parameter: ref_path = string
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
-       
-    Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = \
+
+    if lat == False:
+        Lux_10,Lux_1,Lux_01,Lux_001,Lux_obs_smooth,Lux_obs_rough = \
         wt.get_lux_referencedata(ref_path)
+
     ret = []
     if lat == False:
         Lux = ax.errorbar(Lux,heights,xerr=err,fmt='o',color='navy',)
@@ -474,7 +477,7 @@ def plot_spectra(f_sm, S_uu_sm, S_vv_sm, S_uv_sm, u_aliasing, v_aliasing,
     @parameter: ???
     @parameter: ref_path, type = string
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot() """
+    @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
         ax = plt.gca()
     
@@ -530,7 +533,7 @@ def plot_Re_independence(data,wtref,yerr=0,ax=None,**kwargs):
     @parameter: wtref, type = np.array or list
     @parameter: yerr, type = int or float
     @parameter: ax: axis passed to function
-    @parameter: **kwargs: additional keyword arguments passed to plt.plot()"""
+    @parameter: kwargs: additional keyword arguments passed to plt.plot()"""
     if ax is None:
         ax=plt.gca()
 
@@ -595,12 +598,12 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None,
 def plot_convergence(data_dict,ncols=3,**kwargs):
     """ Plots results of convergence tests performed on any number of 
     quantities in one plot. ncols specifies the number of columns desired in
-    the output plot. **kwargs contains any parameters to be passed to 
+    the output plot. kwargs contains any parameters to be passed to
     plot_convergence_test, such as wtref, ref_length and scale. See doc_string
     of plot_convergence_test for more details.
     @parameter: data_dict, type = dictionary
     @parameter: ncols, type = int
-    @parameter: **kwargs keyword arguments passed to plot_convergence_test"""
+    @parameter: kwargs keyword arguments passed to plot_convergence_test"""
     
     fig, axes = plt.subplots(ncols,int(np.ceil(len(data_dict.keys())/ncols)),
                              figsize=(24,14))
@@ -620,8 +623,7 @@ def plot_JTFA_STFT(u1, v1, t_eq, height, second_comp = 'v',
     @parameter: v1: array of second-component perturbations
     @parameter: t_eq: as defined by Timeseries
     @parameter: height: z as defined by Timeseries
-    @parameter: second_comp, type = string: the name of the second measured
-                wind component
+    @parameter: second_comp, type = string: the name of the second measured wind component
     @parameter: window_length, type = int: window length in ms"""
     
     #set the window size to 3500 ms - this seems to caputure the relevant 
@@ -819,8 +821,7 @@ def plot_perturbation_rose(u1, v1, total_mag, total_direction,
     @parameter: total_mag: array containing magnitude of wind (not perturbation)
     @parameter: total_direction: array containing direction of wind (not perturbation)
     @parameter: bar_divider: inversely proportional to number of bars to be plotted
-    @parameter: second_comp, type = string: the name of the second measured
-                wind component"""
+    @parameter: second_comp, type = string: the name of the second measured wind component"""
     
     u1 = np.asarray(u1)
     v1 = np.asarray(v1)
