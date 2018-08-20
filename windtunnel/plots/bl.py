@@ -768,7 +768,7 @@ def plot_stdevs(data, t_eq, tau, comp='u', ax=None, **kwargs):
     @parameter: t_eq, type = np.array (corresponding times steps in [ms])
     @parameter: tau, type = int or float (characteristic time scale (ms)
     @parameter: ax, axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to ax.bar() """
+    @parameter kwargs : additional keyword arguments passed to ax.bar() """
     # Get current axis
     if ax is None:
         ax = plt.gca()

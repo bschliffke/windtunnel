@@ -1,7 +1,7 @@
 This is makeindex, version 2.15 [TeX Live 2015] (kpathsea + Thai support).
 Scanning style file ./python.ist.......done (7 attributes redefined, 0 ignored).
-Scanning input file windtunnel.idx....done (147 entries accepted, 0 rejected).
-Sorting entries....done (1162 comparisons).
-Generating output file windtunnel.ind....done (189 lines written, 0 warnings).
+Scanning input file windtunnel.idx....done (145 entries accepted, 0 rejected).
+Sorting entries....done (1163 comparisons).
+Generating output file windtunnel.ind....done (187 lines written, 0 warnings).
 Output written in windtunnel.ind.
 Transcript written in windtunnel.ilg.

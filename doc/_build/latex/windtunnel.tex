@@ -55,7 +55,7 @@
 
 
 \title{windtunnel Documentation}
-\date{Aug 08, 2018}
+\date{Aug 20, 2018}
 \release{0.0.1}
 \author{Benyamin Schliffke \& Jessica Wiedemeier}
 \newcommand{\sphinxlogo}{\vbox{}}
@@ -73,7 +73,7 @@ A collection of tools for basic boundary layer and concentration measurements an
 
 
 \chapter{windtunnel}
-\label{\detokenize{index:module-windtunnel}}\label{\detokenize{index:windtunnel}}\label{\detokenize{index:welcome-to-windtunnel-s-documentation}}\index{windtunnel (module)}
+\label{\detokenize{index:module-windtunnel}}\label{\detokenize{index:welcome-to-windtunnel-s-documentation}}\label{\detokenize{index:windtunnel}}\index{windtunnel (module)}
 Python package for basic boundary layer and concentration measurement analysis.
 \index{PointConcentration (class in windtunnel)}
 
@@ -962,25 +962,6 @@ from an equidistant time series of the u component using time step dt.
 
 \end{fulllineitems}
 
-\index{calc\_normalization\_params() (in module windtunnel)}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.calc_normalization_params}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{calc\_normalization\_params}}}{\emph{freqs}, \emph{transform}, \emph{t}, \emph{height}, \emph{mean\_x}, \emph{sdev\_x}, \emph{num\_data\_points}}{}
-Calculate the normalized Fourier transform and frequency for the 
-Fourier transform of x
-Warning: A previous code version normalized segments, while this version 
-normalizes the entire data set at once. The previous version also included 
-a smoothing algorithm, which has been omitted for simplicity.
-@parameter: freqs, type = list or np.array
-@parameter: transform, type = list or np.array - this is the non-normalized Fourier transform
-@parameter: t, type = float - this is time
-@parameter: height, type = float - z in the Timeseries object
-@parameter: mean\_x, type = float - the mean of the parameter of the Fourier transform F(x)
-@parameter: sdev\_x, type = float - the standard deviation of x
-@parameter: num\_data\_points, type = int - the number of elements in x before the transform was found
-
-\end{fulllineitems}
-
 \index{calc\_ref\_spectra() (in module windtunnel)}
 
 \begin{fulllineitems}
@@ -1186,7 +1167,7 @@ Create array from timeseries in path + file.
 \begin{fulllineitems}
 \phantomsection\label{\detokenize{index:windtunnel.get_files}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{get\_files}}}{\emph{path}, \emph{filename}}{}
 Finds files with filename in path as specified. Filename supports the
-Unix shell-style wildcards ({\color{red}\bfseries{}*},?,{[}seq{]},{[}!seq{]})
+Unix shell-style wildcards.
 @parameter: path, type = string
 @parameter: filename, type = string
 
@@ -1325,12 +1306,7 @@ the figure. To change overlap,
 @parameter: v1: array of second-component perturbations
 @parameter: t\_eq: as defined by Timeseries
 @parameter: height: z as defined by Timeseries
-@parameter: second\_comp, type = string: the name of the second measured
-\begin{quote}
-
-wind component
-\end{quote}
-
+@parameter: second\_comp, type = string: the name of the second measured wind component
 @parameter: window\_length, type = int: window length in ms
 
 \end{fulllineitems}
@@ -1346,7 +1322,7 @@ value is 0.
 @parameter: wtref, type = np.array or list
 @parameter: yerr, type = int or float
 @parameter: ax: axis passed to function
-@parameter: {\color{red}\bfseries{}**}kwargs: additional keyword arguments passed to plt.plot()
+@parameter: kwargs: additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1359,7 +1335,19 @@ input from PointConcentration class.
 @parameters: data, type = dict
 @parameters: ylabel, type = string
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.boxplot()
+@parameter kwargs : additional keyword arguments passed to plt.boxplot()
+
+\end{fulllineitems}
+
+\index{plot\_cdfs() (in module windtunnel)}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:windtunnel.plot_cdfs}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_cdfs}}}{\emph{sets}, \emph{lablist}, \emph{ax=None}, \emph{**kwargs}}{}
+Plots CDFs of data in sets using the respective labels from lablist
+@parameter sets: iterable set of data
+@parameter lablist: list of strings
+@parameter ax: axis passed to function
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1369,12 +1357,12 @@ input from PointConcentration class.
 \phantomsection\label{\detokenize{index:windtunnel.plot_convergence}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_convergence}}}{\emph{data\_dict}, \emph{ncols=3}, \emph{**kwargs}}{}
 Plots results of convergence tests performed on any number of 
 quantities in one plot. ncols specifies the number of columns desired in
-the output plot. {\color{red}\bfseries{}**}kwargs contains any parameters to be passed to 
+the output plot. kwargs contains any parameters to be passed to
 plot\_convergence\_test, such as wtref, ref\_length and scale. See doc\_string
 of plot\_convergence\_test for more details.
 @parameter: data\_dict, type = dictionary
 @parameter: ncols, type = int
-@parameter: {\color{red}\bfseries{}**}kwargs keyword arguments passed to plot\_convergence\_test
+@parameter: kwargs keyword arguments passed to plot\_convergence\_test
 
 \end{fulllineitems}
 
@@ -1410,7 +1398,7 @@ then a lateral profile is created.
 @parameter: component, type = string
 @parameter: lat, type = boolean
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1427,7 +1415,7 @@ plotting!
 @parameter: yerr, type = int or float
 @parameter: component, type = string
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1438,7 +1426,7 @@ plotting!
 Creates a scatter plot of x and y.
 @parameter: data, type = list or np.array
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1455,7 +1443,33 @@ is True then a lateral profile, without a loglog scale, is created.
 @parameter: lat, type = boolean
 @parameter: ref\_path = string
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
+
+\end{fulllineitems}
+
+\index{plot\_pdfs() (in module windtunnel)}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:windtunnel.plot_pdfs}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_pdfs}}}{\emph{sets}, \emph{lablist}, \emph{ax=None}, \emph{**kwargs}}{}
+Plots PDFs of data in sets using the respective labels from lablist.
+@parameter sets: iterable set of data
+@parameter lablist: list of strings
+@parameter ax: axis passed to function
+@parameter kwargs : additional keyword arguments passed to plt.plot()
+
+\end{fulllineitems}
+
+\index{plot\_pdfs\_err() (in module windtunnel)}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{index:windtunnel.plot_pdfs_err}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_pdfs\_err}}}{\emph{sets}, \emph{lablist}, \emph{error}, \emph{ax=None}, \emph{**kwargs}}{}
+Plots PDFs of data in sets using the respective labels from lablist with
+a given margin of error.
+@parameter sets: iterable set of data
+@parameter lablist: list of strings
+@parameter error: int or float
+@parameter ax: axis passed to function
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1470,11 +1484,7 @@ the wind. Number of bars depends on bar\_divider and length of u1.
 @parameter: total\_mag: array containing magnitude of wind (not perturbation)
 @parameter: total\_direction: array containing direction of wind (not perturbation)
 @parameter: bar\_divider: inversely proportional to number of bars to be plotted
-@parameter: second\_comp, type = string: the name of the second measured
-\begin{quote}
-
-wind component
-\end{quote}
+@parameter: second\_comp, type = string: the name of the second measured wind component
 
 \end{fulllineitems}
 
@@ -1501,7 +1511,7 @@ components mean value are coloured in orange.
 @parameter: y, type = list or np.array
 @parameter: std\_mask, float
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.scatter()
+@parameter kwargs : additional keyword arguments passed to plt.scatter()
 
 \end{fulllineitems}
 
@@ -1513,19 +1523,21 @@ Plots spectra using INPUT with reference data.
 @parameter: ???
 @parameter: ref\_path, type = string
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
 \index{plot\_stdevs() (in module windtunnel)}
 
 \begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.plot_stdevs}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_stdevs}}}{\emph{u\_unmasked}, \emph{t\_eq}, \emph{tau}, \emph{comp='u'}}{}
-This method plots the spread of an array based on how many standard 
+\phantomsection\label{\detokenize{index:windtunnel.plot_stdevs}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_stdevs}}}{\emph{data}, \emph{t\_eq}, \emph{tau}, \emph{comp='u'}, \emph{ax=None}, \emph{**kwargs}}{}
+This function plots the spread of an array based on how many standard 
 deviations each point is from the mean over each tau-long time period
-@parameter: the array to be analysed
-@parameter: the times corresponding to the array to be analysied (ms)
-@parameter: the characteristic time scale (ms)
+@parameter: data, type = np.array (the array to be analysed)
+@parameter: t\_eq, type = np.array (corresponding times steps in {[}ms{]})
+@parameter: tau, type = int or float (characteristic time scale (ms)
+@parameter: ax, axis passed to function
+@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to ax.bar()
 
 \end{fulllineitems}
 
@@ -1543,16 +1555,7 @@ is 0. If lat is True then a lateral profile is created.
 @parameter: lat, type = boolean
 @parameter: ref\_path, type = string
 @parameter: ax, axis passed to function    
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
-
-\end{fulllineitems}
-
-\index{plot\_wind\_dir\_hist() (in module windtunnel)}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.plot_wind_dir_hist}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_wind\_dir\_hist}}}{\emph{data}, \emph{heights}}{}
-Simple wind direction histogram plot
-@parameter: Timeseries
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1570,7 +1573,7 @@ a lateral profile is created.
 @parameter: yerr, type = int or float
 @parameter: lat, type = boolean
 @parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
@@ -1586,52 +1589,14 @@ a log scale. yerr specifies the uncertainty. Its default value is 0.
 @parameter: heights, type = list or np.array
 @parameter: yerr, type = int or float
 @parameter: ax, axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
+@parameter kwargs : additional keyword arguments passed to plt.plot()
 
 \end{fulllineitems}
 
-\index{plotcdfs() (in module windtunnel)}
+\index{plot\_windrose() (in module windtunnel)}
 
 \begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.plotcdfs}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plotcdfs}}}{\emph{sets}, \emph{lablist}, \emph{ax=None}, \emph{**kwargs}}{}
-Plots CDFs of data in sets using the respective labels from lablist
-@parameter sets: iterable set of data
-@parameter lablist: list of strings
-@parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
-
-\end{fulllineitems}
-
-\index{plotpdfs() (in module windtunnel)}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.plotpdfs}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plotpdfs}}}{\emph{sets}, \emph{lablist}, \emph{ax=None}, \emph{**kwargs}}{}
-Plots PDFs of data in sets using the respective labels from lablist.
-@parameter sets: iterable set of data
-@parameter lablist: list of strings
-@parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
-
-\end{fulllineitems}
-
-\index{plotpdfs\_err() (in module windtunnel)}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.plotpdfs_err}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plotpdfs\_err}}}{\emph{sets}, \emph{lablist}, \emph{error}, \emph{ax=None}, \emph{**kwargs}}{}
-Plots PDFs of data in sets using the respective labels from lablist with
-a given margin of error.
-@parameter sets: iterable set of data
-@parameter lablist: list of strings
-@parameter error: int or float
-@parameter ax: axis passed to function
-@parameter {\color{red}\bfseries{}**}kwargs : additional keyword arguments passed to plt.plot()
-
-\end{fulllineitems}
-
-\index{plotwindrose() (in module windtunnel)}
-
-\begin{fulllineitems}
-\phantomsection\label{\detokenize{index:windtunnel.plotwindrose}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plotwindrose}}}{\emph{inFF}, \emph{inDD}, \emph{num\_bars=10}, \emph{ax=None}, \emph{left\_legend=False}}{}
+\phantomsection\label{\detokenize{index:windtunnel.plot_windrose}}\pysiglinewithargsret{\sphinxcode{\sphinxupquote{windtunnel.}}\sphinxbfcode{\sphinxupquote{plot\_windrose}}}{\emph{inFF}, \emph{inDD}, \emph{num\_bars=10}, \emph{ax=None}, \emph{left\_legend=False}}{}
 Plots windrose with dynamic velocity classes of each 10\% percentile and
 10 degree classes for directional data. The representation of the windrose 
 in this function is more detailed than in plot\_DWD\_windrose().

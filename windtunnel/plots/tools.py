@@ -39,11 +39,9 @@ def plot_windrose(inFF,inDD, num_bars = 10, ax = None, left_legend = False):
     in this function is more detailed than in plot_DWD_windrose().
     @parameter inFF: np.array
     @parameter inDD: np.array
-    @parameter num_bars: how many segments the degree range should be broken 
-                         into
+    @parameter num_bars: how many segments the degree range should be broken into
     @parameter ax: pyplot axes object, must be polar
-    @left_legend: if true, the legend is positioned to the left of the plot 
-                  instead of the right"""
+    @left_legend: if true, the legend is positioned to the left of the plot instead of the right"""
 
     ffs = np.array([])
     percs = np.arange(0,100,10)
