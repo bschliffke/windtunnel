@@ -226,13 +226,12 @@ class Timeseries(pd.DataFrame):
         
         self.weighted_u_mean = wt.transit_time_weighted_mean(
                                                         self.t_transit,
-                                                        self.u.dropna())
+                                                        self.u.dropna().values)
         self.weighted_v_mean = wt.transit_time_weighted_mean(
                                                         self.t_transit,
-                                                        self.v.dropna())
+                                                        self.v.dropna().values)
 
-        return float(self.weighted_u_mean/self.wtref),\
-               float(self.weighted_v_mean/self.wtref)
+        return float(self.weighted_u_mean),float(self.weighted_v_mean)
 
     @property
     def weighted_component_variance(self):
@@ -244,13 +243,12 @@ class Timeseries(pd.DataFrame):
 
         self.weighted_u_var = wt.transit_time_weighted_var(
                                                         self.t_transit,
-                                                        self.u.dropna())
+                                                        self.u.dropna().values)
         self.weighted_v_var = wt.transit_time_weighted_var(
                                                         self.t_transit,
-                                                        self.v.dropna())
+                                                        self.v.dropna().values)
 
-        return float(self.weighted_u_var/self.wtref),\
-               float(self.weighted_v_var/self.wtref)
+        return float(self.weighted_u_var),float(self.weighted_v_var)
 
     @property
     def mean_magnitude(self):

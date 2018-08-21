@@ -4,8 +4,6 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import windtunnel as wt
-import plotly.plotly as py
-import plotly.graph_objs as go
 
 # Create logger
 logger = logging.getLogger()
@@ -80,11 +78,11 @@ def plot_rose(magnitude,directions,mag_steps,dir_steps):#inFF,inDD,ff_steps,dd_r
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
-path = '//ewtl2/projects/Hafencity/coincidence/time series/Boundarylayer/'
-wtref_path = '//ewtl2/projects/Hafencity/wtref/'
+path = '/home/benny/Downloads/data/'
+wtref_path = '/home/benny/Downloads/data/wtref/'
 plot_path = './plots/'
 txt_path = './postprocessed/'
-#ref_path = '/home/benny/Downloads/data/ref_data/'
+ref_path = '/home/benny/Downloads/data/ref_data/'
 file_type = 'pdf'
 namelist = ['HC_BL_UW_139']  #['HC_KM_010']# ['HC_RZU_UV_011']['HC_LAH_UV_015']
 scale = 500
@@ -112,15 +110,15 @@ for name in namelist:
         ts.get_wtref(wtref_path, name, index=i)
         ts.adapt_scale(scale)
         ts.mask_outliers()
-#        ts.weighted_component_mean
-#        ts.weighted_component_variance
+        ts.weighted_component_mean
+        ts.weighted_component_variance
         ts.nondimensionalise()
         ts.calc_direction()
         ts.calc_magnitude()
 #        ts.wind_direction_mag_less_180()
         ts.calc_perturbations()
 #        ts.save2file(file)
-#        time_series[name][file] = ts
+        time_series[name][file] = ts
 
 #%%#
 for name in namelist:
@@ -320,10 +318,10 @@ for name in namelist:
                                   spectra_data[name][file][5],
                                   spectra_data[name][file][6],
                                   wind_comps[name][file],
-                                  time_series[name][file].z)#,
-                                  #ref_path=ref_path)
+                                  time_series[name][file].z,
+                                  ref_path=ref_path)
             plt.tight_layout()
-            #plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
+            plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
 
     # Initiate lists for all quantitites
     x = []
@@ -406,14 +404,14 @@ for name in namelist:
 
         # Turbulence intensity of the first component
         plt.figure(2)
-        wt.plots.plot_turb_int(I_u, heights)#, ref_path=ref_path)
+        wt.plots.plot_turb_int(I_u, heights, ref_path=ref_path)
         plt.tight_layout()
         plt.savefig(plot_path + 'I_u_' + name + '.' + file_type)
 
         # Turbulence intensity of the second component
         plt.figure(3)
-        wt.plots.plot_turb_int(I_v, heights, component='I_w')#,
-                               #ref_path=ref_path)
+        wt.plots.plot_turb_int(I_v, heights, component='I_w',
+                               ref_path=ref_path)
         plt.tight_layout()
         plt.savefig(plot_path + 'I_w_' + name + '.' + file_type)
 
@@ -431,7 +429,7 @@ for name in namelist:
 
         # Double logarithmic profile of Lux data
         plt.figure(6)
-        wt.plots.plot_lux(lux, heights, component='w')#,ref_path=ref_path)
+        wt.plots.plot_lux(lux, heights, component='w',ref_path=ref_path)
         plt.tight_layout()
         plt.savefig(plot_path + 'Lux_' + name + '.' + file_type)
 
