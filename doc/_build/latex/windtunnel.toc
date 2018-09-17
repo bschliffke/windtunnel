@@ -1,5 +1,23 @@
 \select@language {english}
-\contentsline {chapter}{\numberline {1}windtunnel}{3}{chapter.1}
-\contentsline {chapter}{\numberline {2}Indices and tables}{15}{chapter.2}
-\contentsline {chapter}{Python Module Index}{17}{section*.147}
-\contentsline {chapter}{Index}{19}{section*.148}
+\contentsline {chapter}{\numberline {1}License}{3}{chapter.1}
+\contentsline {chapter}{\numberline {2}Contributor Covenant Code of Conduct}{17}{chapter.2}
+\contentsline {section}{\numberline {2.1}Our Pledge}{17}{section.2.1}
+\contentsline {section}{\numberline {2.2}Our Standards}{17}{section.2.2}
+\contentsline {section}{\numberline {2.3}Our Responsibilities}{17}{section.2.3}
+\contentsline {section}{\numberline {2.4}Scope}{18}{section.2.4}
+\contentsline {section}{\numberline {2.5}Enforcement}{18}{section.2.5}
+\contentsline {section}{\numberline {2.6}Attribution}{18}{section.2.6}
+\contentsline {chapter}{\numberline {3}windtunnel}{19}{chapter.3}
+\contentsline {section}{\numberline {3.1}Basics}{19}{section.3.1}
+\contentsline {section}{\numberline {3.2}The Timeseries class}{19}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}Example of intended use (Timeseries class)}{19}{subsection.3.2.1}
+\contentsline {section}{\numberline {3.3}The script \IeC {\textquoteleft }example\_data\_analysis.py\IeC {\textquoteright }}{20}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}Example of \IeC {\textquoteleft }example\_data\_analysis.py\IeC {\textquoteright } input}{20}{subsection.3.3.1}
+\contentsline {section}{\numberline {3.4}Installing the windtunnel package}{20}{section.3.4}
+\contentsline {section}{\numberline {3.5}Useful information}{21}{section.3.5}
+\contentsline {section}{\numberline {3.6}Future development}{21}{section.3.6}
+\contentsline {section}{\numberline {3.7}Documentation}{21}{section.3.7}
+\contentsline {chapter}{\numberline {4}Classes and Functions}{23}{chapter.4}
+\contentsline {chapter}{\numberline {5}Index}{35}{chapter.5}
+\contentsline {chapter}{Python Module Index}{37}{section*.147}
+\contentsline {chapter}{Index}{39}{section*.148}

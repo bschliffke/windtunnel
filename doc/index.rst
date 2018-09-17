@@ -10,15 +10,17 @@ A collection of tools for basic boundary layer and concentration measurements an
 .. toctree::
    :maxdepth: 2
 
-windtunnel
-==========
+   LICENSE <license_link>
+   COC <coc_link>
+   README <readme_link>
+
+Classes and Functions
+=====================
 
 .. automodule:: windtunnel
    :members:
 
-Indices and tables
-==================
+Index
+=====
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
