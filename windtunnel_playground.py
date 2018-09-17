@@ -84,13 +84,13 @@ plot_path = './plots/'
 txt_path = './postprocessed/'
 ref_path = '/home/benny/Downloads/data/ref_data/'
 file_type = 'pdf'
-namelist = ['HC_BL_UW_139']  #['HC_KM_010']# ['HC_RZU_UV_011']['HC_LAH_UV_015']
-scale = 500
+namelist = ['HC_KM_010']#['HC_LAH_UV_015']#['HC_BL_UW_139']  ## ['HC_RZU_UV_011']
+scale = 250
 # 1 = vertical profile
 # 2 = lateral profile
 # 3 = convergence test
 # 4 = Reynolds Number Independence
-mode = 1
+mode = 3
 
 # Check if all necessary output directories exist
 wt.check_directory(plot_path)
@@ -280,15 +280,15 @@ for name in namelist:
             plt.figure(files.index(file) + 100)
             wt.plots.plot_scatter(time_series[name][file].u,
                          time_series[name][file].v)
-            #plt.savefig(plot_path + 'scatter_' + file[:-4] + '.' + file_type)
+            plt.savefig(plot_path + 'scatter_' + file[:-4] + '.' + file_type)
 
             # Plot histograms of each component
             plt.figure(files.index(file) + 200)
             wt.plots.plot_hist(time_series[name][file].u)
-            #plt.savefig(plot_path + 'hist_u_' + file[:-4] + '.' + file_type)
+            plt.savefig(plot_path + 'hist_u_' + file[:-4] + '.' + file_type)
             plt.figure(files.index(file) + 300)
             wt.plots.plot_hist(time_series[name][file].v)
-            #plt.savefig(plot_path + 'hist_v_' + file[:-4] + '.' + file_type)
+            plt.savefig(plot_path + 'hist_v_' + file[:-4] + '.' + file_type)
             spectra_data[name][file] = wt.calc_spectra(
                 time_series[name][file].u.dropna().values,
                 time_series[name][file].v.dropna().values,
@@ -392,15 +392,17 @@ for name in namelist:
         # Plot results of a vertical profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag, u_mean, v_mean, heights)
+        ret, lgd = wt.plots.plot_winddata(mean_mag, u_mean, v_mean, heights)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         # Wind components, logarithmic y-axis
         plt.figure(1)
-        wt.plots.plot_winddata_log(mean_mag, u_mean, v_mean, heights)
+        ret, lgd = wt.plots.plot_winddata_log(mean_mag, u_mean, v_mean, heights)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         # Turbulence intensity of the first component
         plt.figure(2)
@@ -437,9 +439,10 @@ for name in namelist:
         # Results of a lateral profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag, u_mean, v_mean, y, lat=True)
+        ret, lgd = wt.plots.plot_winddata(mean_mag, u_mean, v_mean, y, lat=True)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         # Turbulence intensity of the first component
         plt.figure(1)

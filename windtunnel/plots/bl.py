@@ -329,7 +329,7 @@ def plot_winddata(mean_magnitude, u_mean, v_mean, heights, yerr=0, lat=False,
     @parameter kwargs : additional keyword arguments passed to plt.plot() """
     if ax is None:
        ax = plt.gca()
-       
+
     mean_magnitude = np.asarray(mean_magnitude)
     u_mean = np.asarray(u_mean)
     v_mean = np.asarray(v_mean)
@@ -348,7 +348,7 @@ def plot_winddata(mean_magnitude, u_mean, v_mean, heights, yerr=0, lat=False,
             labels = ['Magnitude','U-component',r'$2^{nd}-component$']
             
             ax.grid(True)
-            ax.legend([M,U,V],labels,bbox_to_anchor=(0.5,1.05),
+            lgd = ax.legend([M,U,V],labels,bbox_to_anchor=(0.5,1.05),
                       loc='lower center',borderaxespad=0.,ncol=3,fontsize=16)
             ax.set_xlabel(r'velocity $[-]$')
             ax.set_ylabel('z full-scale [m]')
@@ -366,14 +366,14 @@ def plot_winddata(mean_magnitude, u_mean, v_mean, heights, yerr=0, lat=False,
             labels = ['Magnitude','U-component',r'$2^{nd}-component$']
         
             ax.grid(True)
-            ax.legend([M,U,V],labels,bbox_to_anchor=(0.5,1.05),
+            lgd = ax.legend([M,U,V],labels,bbox_to_anchor=(0.5,1.05),
                       loc='lower center',borderaxespad=0.,ncol=3,fontsize=16)
             ax.set_xlabel('y full-scale [m]')
             ax.set_ylabel(r'velocity $[-]$')
     
             ret.append(M + U + V)
     
-    return ret
+    return ret, lgd
 
 
 def plot_winddata_log(mean_magnitude,u_mean,v_mean,heights,yerr=0,ax=None,
@@ -403,12 +403,12 @@ def plot_winddata_log(mean_magnitude,u_mean,v_mean,heights,yerr=0,ax=None,
     
     plt.yscale('log')
     ax.grid(True,'both','both')
-    ax.legend([M,U,V],labels,bbox_to_anchor=(0.5,1.05),loc='lower center',
+    lgd = ax.legend([M,U,V],labels,bbox_to_anchor=(0.5,1.05),loc='lower center',
               borderaxespad=0.,ncol=3,fontsize=16)
     ax.set_xlabel(r'wind magnitude $[-]$')
     ax.set_ylabel('z full-scale [m]')
     
-    return ret
+    return ret, lgd
 
 
 def plot_lux(Lux, heights, err=0, lat=False, ref_path=None, ax=None,

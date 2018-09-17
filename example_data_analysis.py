@@ -15,18 +15,18 @@ logger = logging.getLogger()
 # This is an example script. It can be modified to your personal needs.
 # Specify path to data, path to wtref, output paths for plots and txt file, 
 # file type for plots, name of files, scale and desired mode of analysis.
-path = ''
-wtref_path = 'path_to_your_wtref'
-#ref_path = 'path_to_reference_data'
-plot_path = './plots/'
+# Input paths for data and wtref with a list of names of the measurement files
+path = '/path/to/your/data/'
+wtref_path = '/path/to/your/wtref/'
+namelist = ['name_of measurement_file']
 txt_path = './postprocessed/'
+ref_path = '/home/benny/Downloads/data/ref_data/'
 file_type = 'pdf'
-namelist =  []
-scale = 500
-#1 = vertical profile
-#2 = lateral profile
-#3 = convergence test
-#4 = Reynolds Number Independence
+scale = scale
+# 1 = vertical profile
+# 2 = lateral profile
+# 3 = convergence test
+# 4 = Reynolds Number Independence
 mode = 1
 
 # Check if all necessary output directories exist
@@ -102,26 +102,29 @@ for name in namelist:
                                  time_series[name][file].wind_comp2
        
         if mode == 3:
-        # Perform convergence test and plot results, no
-        # output saved as txt, as programme ends at "break"
+            # Perform convergence test and plot results, no
+            # output saved as txt, as programme ends at "break"
             # Average u and v component for different (default) intervals
             # Set maximum interval size, interval and blocksize and initialise
             # list of qunatities.
             max_interval = int(np.size(time_series[name][file].u))
-            interval = 1000
-            blocksize = 1000
+            interval = 5000
+            blocksize = 5000
             # time step
-            dt = time_series[name][file].t_eq[1] -\
+            dt = time_series[name][file].t_eq[1] - \
                  time_series[name][file].t_eq[0]
             # reference length for dimensionless time
             ref_length = 1
+            # nondimensionalise time step using wtref and ref_length
+            # dt = dt*time_series[name][file].wtref/ref_length
             # determine averaging intervals
-            intervals = np.arange(interval,int(0.5*max_interval),blocksize)
-            quantities = ['Magnitude','u_mean',
-                          wind_comps[name][file][1] + '_mean','u_std',
-                          wind_comps[name][file][1] + '_std','I_u',
-                          'I_' + wind_comps[name][file][1],'flux','Lux']
-            
+            intervals = np.arange(interval, int(0.5 * max_interval), blocksize)
+            # intervals = intervals*dt
+            quantities = ['Magnitude', 'u_mean',
+                          wind_comps[name][file][1] + '_mean', 'u_std',
+                          wind_comps[name][file][1] + '_std', 'I_u',
+                          'I_' + wind_comps[name][file][1], 'flux', 'Lux']
+
             # Initialise dictionary using list of quantities
             conv_data = {}
             conv_data.fromkeys(quantities)
@@ -130,12 +133,12 @@ for name in namelist:
                 conv_data[quantity].fromkeys(intervals)
 
             # Calculate convergence test of each quantity for intervals up to
-            # the maximum interval size. Each iteration passes a larger array 
+            # the maximum interval size. Each iteration passes a larger array
             # interval to the wt.calc_* function (this is inefficient regarding
             # computing time but avoids very short arrays being passed to the
-            # wt.calc_* functions). The data is saved in the conv_data 
+            # wt.calc_* functions). The data is saved in the conv_data
             # dictionary.
-            while interval < max_interval/2:
+            while interval < max_interval / 2:
                 M_list = []
                 u_mean_list = []
                 v_mean_list = []
@@ -145,57 +148,56 @@ for name in namelist:
                 I_v_list = []
                 flux_list = []
                 Lux_list = []
-                for i in range(0,max_interval-interval,interval):
-                    M,u_mean,v_mean,u_std,v_std,dd = wt.calc_wind_stats(
-                                   time_series[name][file].u[i:i+interval],
-                                   time_series[name][file].v[i:i+interval])
+                for i in range(0, max_interval - interval, interval):
+                    #                    dt = time_series[name][file].t_eq[i+interval] -\
+                    #                         time_series[name][file].t_eq[i]
+                    M, u_mean, v_mean, u_std, v_std, dd = wt.calc_wind_stats(
+                        time_series[name][file].u[i:i + interval],
+                        time_series[name][file].v[i:i + interval])
                     M_list.append(M)
                     u_mean_list.append(u_mean)
                     v_mean_list.append(v_mean)
                     u_std_list.append(u_std)
                     v_std_list.append(v_std)
-                    
-                    I_u,I_v,flux = wt.calc_turb_data(
-                                   time_series[name][file].u[i:i+interval],
-                                   time_series[name][file].v[i:i+interval])
+
+                    I_u, I_v, flux = wt.calc_turb_data(
+                        time_series[name][file].u[i:i + interval],
+                        time_series[name][file].v[i:i + interval])
                     I_u_list.append(I_u)
                     I_v_list.append(I_v)
                     flux_list.append(flux)
-                    
+
                     Lux = wt.calc_lux_data(dt,
-                                   time_series[name][file].u[i:i+interval])
+                                           time_series[name][file].u.dropna().values[i:i + interval])
                     Lux_list.append(Lux)
-                    
-                conv_data['Magnitude'][interval]  = np.asarray(M_list)
-                conv_data['u_mean'][interval]     = np.asarray(u_mean_list)
-                conv_data[wind_comps[name][file][1] +'_mean'][interval] =\
-                                                        np.asarray(v_mean_list)
-                conv_data['u_std'][interval]      = np.asarray(u_std_list)
-                conv_data[wind_comps[name][file][1] + '_std'][interval] =\
-                                                         np.asarray(v_std_list)
-                conv_data['I_u'][interval]        = np.asarray(I_u_list)
-                conv_data['I_' + wind_comps[name][file][1]][interval]  =\
-                                                           np.asarray(I_v_list)
-                conv_data['flux'][interval]       = np.asarray(flux_list)
-                conv_data['Lux'][interval]        = np.asarray(Lux_list)
-                             
+
+                conv_data['Magnitude'][interval] = np.asarray(M_list)
+                conv_data['u_mean'][interval] = np.asarray(u_mean_list)
+                conv_data[wind_comps[name][file][1] + '_mean'][interval] = \
+                    np.asarray(v_mean_list)
+                conv_data['u_std'][interval] = np.asarray(u_std_list)
+                conv_data[wind_comps[name][file][1] + '_std'][interval] = \
+                    np.asarray(v_std_list)
+                conv_data['I_u'][interval] = np.asarray(I_u_list)
+                conv_data['I_' + wind_comps[name][file][1]][interval] = \
+                    np.asarray(I_v_list)
+                conv_data['flux'][interval] = np.asarray(flux_list)
+                conv_data['Lux'][interval] = np.asarray(Lux_list)
+
                 interval = interval + blocksize
-            
+
             # Plot convergence test results for each of the nine quanities
             # investigated. The plot is saved in plot_path, specified at the
             # beginning of this example programme.
             plt.figure(1001)
-            wt.plot_convergence_test(conv_data['Magnitude'],conv_data['u_mean'],
-                                  conv_data[wind_comps[name][file][1]+'_mean'],
-                                  conv_data['u_std'],
-                                  conv_data[wind_comps[name][file][1] +'_std'],
-                                  conv_data['I_u'],
-                                  conv_data['I_' + wind_comps[name][file][1]],
-                                  conv_data['flux'],conv_data['Lux'],
-                                  time_series[name][file].wtref,ref_length,
-                                  scale)
-            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type)
-            quit()
+            wt.plots.plot_convergence(conv_data,
+                                      wtref=time_series[name][file].wtref,
+                                      ref_length=ref_length, scale=scale)
+            plt.tight_layout()
+            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type,
+                        dpi=1000,bbox_inches='tight')
+
+            raise Exception('Convergence test complete!')
     
         # Calculate mean wind quantities
         dt = time_series[name][file].t_eq[1] - time_series[name][file].t_eq[0]
@@ -204,7 +206,7 @@ for name in namelist:
         turb_data[name][file] = wt.calc_turb_data(time_series[name][file].u,
                                                   time_series[name][file].v)
         lux_data[name][file] = wt.calc_lux_data(dt,
-                                                (time_series[name][file].u*
+                                                (time_series[name][file].u.dropna().values*
                                                 time_series[name][file].wtref))
         
         if mode == 1:
@@ -249,7 +251,7 @@ for name in namelist:
                                   spectra_data[name][file][5],
                                   spectra_data[name][file][6],
                                   wind_comps[name][file],
-                                  time_series[name][file].z)
+                                  time_series[name][file].z,ref_path=ref_path)
             plt.savefig(plot_path + 'spectra_' + file[:-4] + '.' + file_type)
   
     # Initiate lists for all quantitites
@@ -321,24 +323,26 @@ for name in namelist:
         # Plot results of a vertical profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag,u_mean,v_mean,heights)
-        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
+        ret, lgd = wt.plots.plot_winddata(mean_mag,u_mean,v_mean,heights)
+        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
     
         # Wind components, logarithmic y-axis
         plt.figure(1)
-        wt.plots.plot_winddata_log(mean_mag,u_mean,v_mean,heights)
+        ret, lgd = wt.plots.plot_winddata_log(mean_mag,u_mean,v_mean,heights)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
         
         # Turbulence intensity of the first component
         plt.figure(2)
-        wt.plots.plot_turb_int(I_u,heights)
+        wt.plots.plot_turb_int(I_u,heights,ref_path=ref_path)
         plt.tight_layout()
         plt.savefig(plot_path + 'I_u_' + name + '.' + file_type)
     
         # Turbulence intensity of the second component
         plt.figure(3)
-        wt.plots.plot_turb_int(I_v,heights,component='I_w')
+        wt.plots.plot_turb_int(I_v,heights,component='I_w',ref_path=ref_path)
         plt.tight_layout()
         plt.savefig(plot_path + 'I_w_' + name + '.' + file_type)
     
@@ -356,7 +360,7 @@ for name in namelist:
     
         # Double logarithmic profile of Lux data
         plt.figure(6)
-        wt.plots.plot_lux(lux,heights,component='w')
+        wt.plots.plot_lux(lux,heights,component='w',ref_path=ref_path)
         plt.tight_layout()
         plt.savefig(plot_path + 'Lux_' + name + '.' + file_type)
         
@@ -364,9 +368,10 @@ for name in namelist:
         # Results of a lateral profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag,u_mean,v_mean,y,lat=True)
+        ret, lgd = wt.plots.plot_winddata(mean_mag,u_mean,v_mean,y,lat=True)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
         
         # Turbulence intensity of the first component
         plt.figure(1)
