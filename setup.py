@@ -26,10 +26,10 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        'matplotlib>=1.5.1',
+        'matplotlib>=2.0.0',
         'numpy>=1.10.4',
         'pandas',
-        'scipy',
+        'scipy>=0.19.1',
         'scikit-image',
     ],
 )

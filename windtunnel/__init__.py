@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Python package for use with BSA software output.
+"""Python package for basic boundary layer and concentration measurement analysis.
 """
 
 import logging
 
 from .utils import *
-from .stats import *
-from . import plots
+from .flow.stats import *
+# from .concentration.stats import *
+from .plots import *
 from .timeseries import *
+from .timeseries_nc import *
+from .PuffConcentration import *
+from .PointConcentration import *
 
 # set standards for Logging module
 logging.basicConfig(level=logging.DEBUG,

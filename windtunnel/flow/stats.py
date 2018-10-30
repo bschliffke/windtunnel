@@ -14,8 +14,11 @@ __all__ = [
     'calc_stats',
     'calc_exceedance_prob',
     'calc_wind_stats',
+    'calc_wind_stats_wght',
     'calc_turb_data',
+    'calc_turb_data_wght',
     'calc_lux_data',
+    'calc_lux_data_wght',
     'calc_acorr',
     'calc_autocorr',
     'calc_spectra',
@@ -25,6 +28,7 @@ __all__ = [
     'power_law',
     'calc_alpha',
     'calc_z0',
+    'calc_normalization_params',
 ]
 
 def calc_intervalmean(indata,intervals,DD=False):    
@@ -123,6 +127,34 @@ def calc_wind_stats(u_comp,v_comp,wdir=0.):
 
     return data
    
+    
+def calc_wind_stats_wght(transit_time,u_comp,v_comp,wdir=0.):
+    """ Calculate wind data from equidistant times series of u and 
+    v components. wdir is a reference wind direction.
+    @parameter: transit_time, type = np.array
+    @parameter: u_comp, type = np.array
+    @parameter: v_comp, type = np.array
+    @parameter: wdir: int"""
+    
+    mask = mask = np.logical_and(~np.isnan(u_comp),
+                          ~np.isnan(v_comp))
+    u = u_comp[mask]
+    v = v_comp[mask]
+    
+    # TODO: test ways of applying TT weighting to Magnitude
+    Magnitude = np.mean(np.sqrt(u**2+v**2))
+    u_mean = wt.transit_time_weighted_mean(transit_time,u)
+    v_mean = wt.transit_time_weighted_mean(transit_time,v)       
+    Direction = wdir-np.arctan2(v_mean,u_mean)*180/np.pi
+    if Direction>360: Direction-=360
+    if Direction<0: Direction+=360    
+    u_std = np.sqrt(wt.transit_time_weighted_var(transit_time,u))
+    v_std = np.sqrt(wt.transit_time_weighted_var(transit_time,v))
+
+    data = np.array([Magnitude,u_mean,v_mean,u_std,v_std,Direction])
+
+    return data
+
 
 def calc_turb_data(u_comp,v_comp):
     """ Calculate turbulence intensity and turbulent fluxes from equidistant
@@ -132,8 +164,8 @@ def calc_turb_data(u_comp,v_comp):
     
     mask = mask = np.logical_and(~np.isnan(u_comp),
                           ~np.isnan(v_comp))    
-    u = u_comp[mask]
-    v = v_comp[mask]
+    u = np.asarray(u_comp[mask])
+    v = np.asarray(v_comp[mask])
     
     M = np.mean(np.sqrt(u_comp**2 +v_comp**2))
     u_mean = np.mean(u)
@@ -151,6 +183,33 @@ def calc_turb_data(u_comp,v_comp):
     data = np.array([I_u,I_v,flux])
     
     return data
+
+
+def calc_turb_data_wght(transit_time,u_comp,v_comp):
+    """ Calculate turbulence intensity and turbulent fluxes from equidistant
+    times series of u and v components using transit time weighted statistics.
+    @parameter: transit_time. type = np.array
+    @parameter: u_compy type = np.array
+    @parameter: v_comp, type = np.array"""    
+    mask = mask = np.logical_and(~np.isnan(u_comp),
+                          ~np.isnan(v_comp))    
+    u = u_comp[mask]
+    v = v_comp[mask]
+    
+    # TODO: test ways of applying TT weighting to M
+    M = np.mean(np.sqrt(u_comp**2 +v_comp**2))
+    u_std = np.sqrt(wt.transit_time_weighted_var(transit_time,u))
+    v_std = np.sqrt(wt.transit_time_weighted_var(transit_time,v))
+    # TURBULENCE INTENSITY
+    I_u = u_std/np.mean(M)
+    I_v = v_std/np.mean(M)
+    # Fluxes
+    flux = wt.transit_time_weighted_fluxes(transit_time,u_comp,v_comp)
+    
+    data = np.array([I_u,I_v,flux])
+    
+    return data
+
 
 def calc_lux_data(dt,u_comp):
     """ Calculates the integral length scale according to R. Fischer (2011) 
@@ -197,6 +256,55 @@ def calc_lux_data(dt,u_comp):
             break
         
     Lux = abs(Lux*np.mean(u_comp)*dt)
+    
+    return Lux
+
+
+def calc_lux_data_wght(transit_time,dt,u_comp):
+    """ Calculates the integral length scale according to R. Fischer (2011) 
+    from an equidistant time series of the u component using time step dt.
+    @parameter: t_eq, type = int or float
+    @parameter: u_comp, type = np.array or list """
+    
+    if np.size(u_comp) < 5:
+        raise Exception('Too few value to estimate Lux!')
+
+    mask = np.where(~np.isnan(u_comp))
+    
+    u = u_comp[mask]
+
+    lag_eq = np.arange(1,np.size(u)+1) * dt# array of time lags
+    u_eq_acorr = calc_acorr(u,np.size(u))# autocorrelation (one sided) of time 
+                                         # series u_eq
+       
+    Lux = 0.
+    # see dissertation R.Fischer (2011) for calculation method
+    for i in range(np.size(u)-2):
+
+        autc1 = u_eq_acorr[i]
+    
+        autc2 = u_eq_acorr[i+1]
+    
+        Lux = Lux + (autc1 + autc2)*0.5
+
+        if autc2>autc1:
+            acorr_fit = np.polyfit(lag_eq[:i],np.log(abs(u_eq_acorr[:i])),deg=1)
+            acorr_fit = np.exp(acorr_fit[0]*lag_eq+acorr_fit[1])
+        
+            if np.min(acorr_fit)<0.001:
+                ix = np.where(acorr_fit<0.001)[0][0]
+        
+            else:
+                ix = acorr_fit.size
+                
+            Lux = Lux+(np.sum(acorr_fit[i+1:ix])+
+                       np.sum(acorr_fit[i+2:ix+1]))*0.5
+            break
+
+        elif autc1 <= 0:
+            break
+        
+    Lux = abs(Lux*wt.transit_time_weighted_mean(transit_time,u_comp)*dt)
     
     return Lux
 
@@ -284,6 +392,8 @@ def calc_spectra(u_comp,v_comp,t_eq,height):
         S_uv = E_uv * len(t_eq)*(t_eq[1]-t_eq[0])
 
     # dimensionless
+    S_uu = np.abs(freq[1:nyquist_freq+1])*S_uu/(np.nanstd(u_comp)**2)
+    S_vv = np.abs(freq[1:nyquist_freq+1])*S_vv/(np.nanstd(v_comp)**2)
     S_uv = np.abs(freq[1:nyquist_freq+1])*S_uv/np.abs(u_comp.std()*v_comp.std())
 
     ##  REDUCED FREQUENCY (PLOT and reference spectra)
@@ -327,6 +437,44 @@ def calc_spectra(u_comp,v_comp,t_eq,height):
                                          np.diff(S_uv_sm[-10:])>=0.)[0],[9]))[0]
 
     return f_sm,S_uu_sm,S_vv_sm,S_uv_sm,u_aliasing,v_aliasing,uv_aliasing
+
+#    """ Calculate dimensionless energy density spectra from an equidistant 
+#    time series.
+#    @parameter: u_comp, type = np.array or list
+#    @parameter: v_comp, type = np.array or list
+#    @parameter: t_eq, type = np.array or list """
+#    ## FREQUENCY
+#    freq = np.fft.fftfreq(np.size(u_comp),t_eq[1]-t_eq[0])
+#
+#    ## FFT
+#    fft_u = np.fft.fft(u_comp)*1./np.size(u_comp)        #  normalized fft
+#    fft_v = np.fft.fft(v_comp)*1./np.size(v_comp) 
+#    uv_param = np.sqrt(fft_u * fft_v) # This is used in place of a true Fourier 
+#                                      # transform to calculate diagonal energy
+#    
+#    u_normalization_params = wt.calc_normalization_params(freq, fft_u, t_eq, 
+#                                                       height, 
+#                                                       np.nanmean(u_comp), 
+#                                                       np.std(u_comp), 
+#                                                       len(u_comp))
+#    v_normalization_params = wt.calc_normalization_params(freq, fft_v, t_eq, 
+#                                                       height, 
+#                                                       np.nanmean(v_comp), 
+#                                                       np.std(v_comp), 
+#                                                       len(v_comp))
+#    uv_normalization_params = wt.calc_normalization_params(freq, uv_param, 
+#                                                       t_eq, 
+#                                                       height, 
+#                                                       np.nanmean(
+#                                                       np.sqrt(v_comp*u_comp)), 
+#                                                       np.std(
+#                                                       np.sqrt(v_comp*u_comp)),
+#                                                       len(v_comp))
+#    
+#    return u_normalization_params[0],u_normalization_params[1],\
+#           v_normalization_params[1],uv_normalization_params[1],\
+#           u_normalization_params[2],v_normalization_params[2],\
+#           uv_normalization_params[2]
 
 
 def calc_ref_spectra(reduced_freq,a,b,c,d,e):
@@ -494,3 +642,42 @@ def calc_z0(u_mean,heights,d0=0.,sfc_height=120.,BL_height=600.):
         err = np.nan
     
     return z0, err
+
+def calc_normalization_params(freqs, transform, t, height, mean_x, sdev_x, 
+                              num_data_points):
+    pass
+#    """ Calculate the normalized Fourier transform and frequency for the 
+#    Fourier transform of x
+#    Warning: A previous code version normalized segments, while this version 
+#    normalizes the entire data set at once. The previous version also included 
+#    a smoothing algorithm, which has been omitted for simplicity.
+#    @parameter: freqs, type = list or np.array
+#    @parameter: transform, type = list or np.array - this is the non-normalized
+#                                                     Fourier transform
+#    @parameter: t, type = float - this is time
+#    @parameter: height, type = float - z in the Timeseries object
+#    @parameter: mean_x, type = float - the mean of the parameter of the Fourier
+#                                       transform F(x)
+#    @parameter: sdev_x, type = float - the standard deviation of x
+#    @parameter: num_data_points, type = int - the number of elements in x 
+#                                              before the transform was found"""   
+#
+#    ## DISCRETE SPECTRA
+#    transform = transform/num_data_points
+#
+#
+#    E = transform ** 2
+#    S = E * len(t)*(t[1]-t[0])
+#   
+#    ##  REDUCED FREQUENCY (PLOT and reference spectra)
+#    reduced_freq = np.abs(freqs*height/mean_x)
+#    reduced_transform = np.abs(np.meshgrid(S[0],
+#                               freqs,sparse=True)[0]*S/sdev_x**2)
+#    reduced_transform = reduced_transform[0]
+#
+#    ##  ALIASING
+#    aliasing = reduced_freq.size - 9 + \
+#               np.hstack((np.where(np.diff(
+#                          reduced_transform[-10:])>=0.)[0],[9]))[0]
+#    
+#    return reduced_transform, reduced_freq, aliasing

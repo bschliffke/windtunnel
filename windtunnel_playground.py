@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 import logging
-import os
-import windtunnel as wt
+import numpy as np
 import matplotlib.pyplot as plt
+import windtunnel as wt
 
 # Create logger
 logger = logging.getLogger()
 
 
-# %%#
-# TODO: class Timeseries_nc:
+# %%#    
 
-####### USE FROM HERE ON DOWN ################
-
-
+            
 def plot_alpha_z0(alpha, z0, alpha_err, z0_err, ax=None, **kwargs):
     """ Calculates and plots the ratio of alpha to z0, with reference data.
     @parameter: alpha, type = float or int
@@ -56,15 +52,27 @@ def get_ratio_referencedata():
     # ref_path = '//ewtl2/work/_EWTL Software/Python/Reference data/'
     # TODO: finish this with new ref data
 
-def check_directory(directory):
-    """ Checks if directory exists. If directory doesn't exist, it is created.
-    @parameter: directory, type = string """
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        print("Desired directory created.")
 
-# TODO: alpha/z0 ratio plot (optional)
-# TODO: documentation (sphinx)
+def plot_rose(magnitude,directions,mag_steps,dir_steps):#inFF,inDD,ff_steps,dd_range):
+    np.random.seed(19680801)
+    # Compute pie slices
+    #N = 20
+    bins = np.arange(0,360,dir_steps)
+    inds = np.argsort(directions)
+    theta = directions[inds]#np.linspace(0.0, 2 * np.pi, N, endpoint=False)
+    radii = magnitude[inds]#10 * np.random.rand(N)
+    width = dir_steps #np.pi / 4 * np.random.rand(N)
+    
+    ax = plt.subplot(111, projection='polar')
+    bars = ax.bar(theta, radii, width=width, bottom=0.0)
+    
+    # Use custom colors and opacity
+    for r, bar in zip(radii, bars):
+        bar.set_facecolor(plt.cm.viridis(r / 10.))
+        bar.set_alpha(0.5)
+    
+    plt.show()
+
 
 # %%#
 # This is an example script. It can be modified to your personal needs.
@@ -76,13 +84,17 @@ plot_path = './plots/'
 txt_path = './postprocessed/'
 ref_path = '/home/benny/Downloads/data/ref_data/'
 file_type = 'pdf'
-namelist = ['HC_BL_UW_139']  # ['HC_BL_UW_130']['HC_KM_010']['HC_RZU_UV_011']['HC_LAH_UV_015']
-scale = 500
+namelist = ['HC_KM_010']#['HC_LAH_UV_015']#['HC_BL_UW_139']  ## ['HC_RZU_UV_011']
+scale = 250
 # 1 = vertical profile
 # 2 = lateral profile
 # 3 = convergence test
 # 4 = Reynolds Number Independence
-mode = 1
+mode = 3
+
+# Check if all necessary output directories exist
+wt.check_directory(plot_path)
+wt.check_directory(txt_path)
 
 time_series = {}
 time_series.fromkeys(namelist)
@@ -96,18 +108,21 @@ for name in namelist:
         ts = wt.Timeseries.from_file(path + file)
         ts.get_wind_comps(path + file)
         ts.get_wtref(wtref_path, name, index=i)
+        ts.adapt_scale(scale)
+        ts.mask_outliers()
         ts.weighted_component_mean
         ts.weighted_component_variance
         ts.nondimensionalise()
-        ts.adapt_scale(scale)
-        ts.equidistant()
-        ts.mask_outliers()
-        ts.mean_magnitude
-        ts.mean_direction
-        ts.save2file(file)
+        ts.calc_direction()
+        ts.calc_magnitude()
+#        ts.wind_direction_mag_less_180()
+        ts.calc_perturbations()
+#        ts.save2file(file)
         time_series[name][file] = ts
 
+#%%#
 for name in namelist:
+    files = wt.get_files(path, name)
     # Check if positions in all files match for vertical profile
     if not mode == 2:
         for i in range(np.size(files) - 2):
@@ -136,6 +151,7 @@ spectra_data = {}
 spectra_data.fromkeys(namelist)
 
 for name in namelist:
+    files = wt.get_files(path, name)
     # Iniate second layer of dictionaries for results 
     wind_comps[name] = {}
     wind_comps[name].fromkeys(files)
@@ -245,7 +261,8 @@ for name in namelist:
                                       wtref=time_series[name][file].wtref,
                                       ref_length=ref_length, scale=scale)
             plt.tight_layout()
-            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type)
+            plt.savefig(plot_path + 'convergence_' + name + '.' + file_type,
+                        dpi=1000,bbox_inches='tight')
             quit()
 
         # Calculate mean wind quantities
@@ -255,14 +272,14 @@ for name in namelist:
         turb_data[name][file] = wt.calc_turb_data(time_series[name][file].u,
                                                   time_series[name][file].v)
         lux_data[name][file] = wt.calc_lux_data(dt,
-                                                (time_series[name][file].u *
-                                                 time_series[name][file].wtref))
+                                               (time_series[name][file].u.dropna().values *
+                                                time_series[name][file].wtref))
 
         if mode == 1:
             # Plot scatter plot of raw data
             plt.figure(files.index(file) + 100)
             wt.plots.plot_scatter(time_series[name][file].u,
-                                  time_series[name][file].v)
+                         time_series[name][file].v)
             plt.savefig(plot_path + 'scatter_' + file[:-4] + '.' + file_type)
 
             # Plot histograms of each component
@@ -273,23 +290,23 @@ for name in namelist:
             wt.plots.plot_hist(time_series[name][file].v)
             plt.savefig(plot_path + 'hist_v_' + file[:-4] + '.' + file_type)
             spectra_data[name][file] = wt.calc_spectra(
-                time_series[name][file].u,
-                time_series[name][file].v,
+                time_series[name][file].u.dropna().values,
+                time_series[name][file].v.dropna().values,
                 time_series[name][file].t_eq,
                 time_series[name][file].z)
             # Save spectra data
-            np.savetxt(txt_path + 'spectra_' + file[:-4] + '.txt',
-                       np.vstack((spectra_data[name][file][0],
-                                  spectra_data[name][file][1],
-                                  spectra_data[name][file][2],
-                                  spectra_data[name][file][3])).transpose(),
-                       fmt='%.8f',
-                       header=('dimensionless spectra - smoothend according to'
-                               'reduced frequency bins\n'
-                               'frequency=0 where no energy content\n'
-                               'format: standard numpy.genfromtxt()\n'
-                               'variables = \"f_sm\" \"S_uu_sm\" \"S_vv_sm\" '
-                               '\"S_uv_sm\" '))
+#            np.savetxt(txt_path + 'spectra_' + file[:-4] + '.txt',
+#                       np.vstack((spectra_data[name][file][0],
+#                                  spectra_data[name][file][1],
+#                                  spectra_data[name][file][2],
+#                                  spectra_data[name][file][3])).transpose(),
+#                       fmt='%.8f',
+#                       header=('dimensionless spectra - smoothend according to'
+#                               'reduced frequency bins\n'
+#                               'frequency=0 where no energy content\n'
+#                               'format: standard numpy.genfromtxt()\n'
+#                               'variables = \"f_sm\" \"S_uu_sm\" \"S_vv_sm\" '
+#                               '\"S_uv_sm\" '))
 
             # Plot spectra
             plt.figure(files.index(file) + 400)
@@ -312,16 +329,20 @@ for name in namelist:
     heights = []
     mean_mag = []
     u_mean = []
+    u_mean_wght = []
     u_std = []
+    u_std_wght = []
     v_mean = []
+    v_mean_wght = []
     v_std = []
+    v_std_wght = []
     I_u = []
     I_v = []
     fluxes = []
     lux = []
     wdir = []
     wtref = []
-
+    
     for file in files:
         # Gather all quantities for a complete profile
         x.append((time_series[name][file].x))
@@ -329,12 +350,16 @@ for name in namelist:
         heights.append((time_series[name][file].z))
         mean_mag.append(time_series[name][file].mean_magnitude)
         u_mean.append(np.mean(time_series[name][file].u))
+        u_mean_wght.append(time_series[name][file].weighted_component_mean[0])
         u_std.append(np.std(time_series[name][file].u))
+        u_std_wght.append(np.sqrt(time_series[name][file].weighted_component_variance[0]))
         v_mean.append(np.mean(time_series[name][file].v))
+        v_mean_wght.append(time_series[name][file].weighted_component_mean[1])
         v_std.append(np.std(time_series[name][file].v))
+        v_std_wght.append(np.sqrt(time_series[name][file].weighted_component_variance[1]))
         wdir.append(time_series[name][file].mean_direction)
         wtref.append(time_series[name][file].wtref)
-
+        
         I_u.append(turb_data[name][file][0])
         I_v.append(turb_data[name][file][1])
 
@@ -347,32 +372,37 @@ for name in namelist:
         wt.plots.plot_Re_independence(mean_mag, wtref)
         break
 
-    # Save quantities for vertical and lateral profiles    
+   # Save quantities for vertical and lateral profiles    
     np.savetxt(txt_path + name + '_turb.txt',
-               np.vstack((x, y, heights, mean_mag, u_mean, v_mean, u_std, v_std, I_u,
-                          I_v, lux, fluxes, wdir, wtref)).transpose(),
+               np.vstack((x, y, heights, mean_mag, u_mean, u_mean_wght, v_mean,
+                          v_mean_wght, u_std, u_std_wght, v_std, v_std_wght,
+                          I_u, I_v, lux, fluxes, wdir, wtref)).transpose(),
                fmt='%.8f', header=('flow and turbulence parameters\n'
                                    'units: dimensionless!\n'
                                    'format: standard numpy.genfromtxt()\n'
-                                   'variables = \"x\" \"y\" \"z\" \"M\" \"{0}_mean\" \"{1}_mean\"'
-                                   '\"{0}_std\" \"{1}_std\" \"I_{0}\" \"I_{1}\" \"L{0}x\" '
-                                   '\"{0}\'{1}\'_flux\" \"wdir\" '
+                                   'variables = \"x\" \"y\" \"z\" \"M\" '
+                                   '\"{0}_mean\" \"{0}_mean_wght\" '
+                                   '\"{1}_mean\" \"{1}_mean_wght\" \"{0}_std\"'
+                                   ' \"{0}_std_wght\" \"{1}_std\" '
+                                   '\"{1}_std_wght\" \"I_{0}\" \"I_{1}\" '
+                                   '\"L{0}x\" \"{0}\'{1}\'_flux\" \"wdir\" '
                                    '\"wtref\"'.format(wind_comps[name][file][0],
                                                       wind_comps[name][file][1])))
-
     if mode == 1:
         # Plot results of a vertical profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag, u_mean, v_mean, heights)
+        ret, lgd = wt.plots.plot_winddata(mean_mag, u_mean, v_mean, heights)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         # Wind components, logarithmic y-axis
         plt.figure(1)
-        wt.plots.plot_winddata_log(mean_mag, u_mean, v_mean, heights)
+        ret, lgd = wt.plots.plot_winddata_log(mean_mag, u_mean, v_mean, heights)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_log_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         # Turbulence intensity of the first component
         plt.figure(2)
@@ -409,9 +439,10 @@ for name in namelist:
         # Results of a lateral profile
         # Wind components
         plt.figure(0)
-        wt.plots.plot_winddata(mean_mag, u_mean, v_mean, y, lat=True)
+        ret, lgd = wt.plots.plot_winddata(mean_mag, u_mean, v_mean, y, lat=True)
         plt.tight_layout()
-        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type)
+        plt.savefig(plot_path + 'wind_data_' + name + '.' + file_type,
+                    bbox_extra_artists=(lgd,), bbox_inches='tight')
 
         # Turbulence intensity of the first component
         plt.figure(1)

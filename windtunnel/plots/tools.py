@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 
 __all__ = [
     'Windrose',
-    'plotwindrose',
+    'plot_windrose',
     'plot_DWD_windrose',
     'plot_rose',
-    'plotpdfs',
-    'plotpdfs_err',
-    'plotcdfs',
+    'plot_pdfs',
+    'plot_pdfs_err',
+    'plot_cdfs',
 ]
 
 class Windrose:
@@ -33,30 +33,41 @@ class Windrose:
         return self.wdir,np.array(self.ws)
     
     
-def plotwindrose(inFF,inDD):
+def plot_windrose(inFF,inDD, num_bars = 10, ax = None, left_legend = False):
     """ Plots windrose with dynamic velocity classes of each 10% percentile and
     10 degree classes for directional data. The representation of the windrose 
     in this function is more detailed than in plot_DWD_windrose().
     @parameter inFF: np.array
-    @parameter inDD: np.array"""
+    @parameter inDD: np.array
+    @parameter num_bars: how many segments the degree range should be broken into
+    @parameter ax: pyplot axes object, must be polar
+    @left_legend: if true, the legend is positioned to the left of the plot instead of the right"""
+
     ffs = np.array([])
     percs = np.arange(0,100,10)
     for perc in percs:
         ffs = np.append(ffs,np.percentile(inFF,perc))
-    dd_range = 10.
+        
+    factors_of_360 = np.array([1., 2., 3., 4., 5., 6., 8., 10., 12.,
+                               18., 20., 36., 40., 120., 360.])
+    # find appropriate degree width for each bar
+    dd_range = min(factors_of_360[factors_of_360 > 360/num_bars]) 
     labels = []
     for i,f in enumerate(ffs[:-2]):
        labels.append(r'$'+'{0:.2f}-{1:.2f}'.format(f,ffs[i+1])+'\ ms^{-1}$')
     labels.append(r'$'+'>{0:.2f}'.format(ffs[-2])+'\ ms^{-1}$')
     
     ##  DATA PROCESSING
-    dd,ff = Windrose(inDD,inFF).pack(dd_range,ffs)
+    dd,ff = Windrose(np.asarray(inDD),np.asarray(inFF)).pack(dd_range,ffs)
     dd = dd*np.pi/180.
     
     ##  PLOT
     width = dd_range*np.pi/180.
     cmap = plt.cm.jet
-    ax = plt.subplot(111,polar=True)
+    
+    if(ax is None):
+        ax = plt.subplot(111,polar=True)
+        
     ax.bar(dd, ff[:,0],
            width=width,
            bottom=0.,
@@ -77,10 +88,20 @@ def plotwindrose(inFF,inDD):
     ax.set_yticklabels([])
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
-    ax.legend(bbox_to_anchor=(1.14, 0.5), loc='center left',
-                     borderaxespad=0.,fontsize=12)
-
     
+    if(left_legend):
+        bbox = (-1.15, 0.5)
+    else:
+        bbox = (1.25, 0.5)
+    ax.legend(bbox_to_anchor=bbox, loc='center left',
+                     borderaxespad=0.,fontsize=8, handlelength=1)
+    
+    # copied from: 
+    # https://stackoverflow.com/questions/9651092/
+    # my-matplotlib-pyplot-legend-is-being-cut-off/14246266
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.75, box.height])
+
 def plot_DWD_windrose(inFF,inDD):
     """ Plots windrose according to DWD classes of 1 m/s for velocity data and
     30 degree classes for directional data. The representation of the windrose 
@@ -99,7 +120,7 @@ def plot_DWD_windrose(inFF,inDD):
     dd = dd*np.pi/180.
     
     ##  PLOT
-    width = (2*np.pi) / dd_range
+    width = dd_range*np.pi/180.
     cmap = plt.cm.jet
     ax = plt.subplot(111,polar=True)
     ax.bar(dd, ff[:,0],
@@ -141,10 +162,10 @@ def plot_rose(inFF,inDD,ff_steps,dd_range):
     
     ##  DATA PROCESSING
     dd,ff = Windrose(inDD,inFF).pack(dd_range,ff_steps)
-    dd = dd*np.pi/180.
+    #dd = dd*np.pi/180.
     
     ##  PLOT
-    width = (2*np.pi) / dd_range
+    width = dd_range#*np.pi/180.
     cmap = plt.cm.jet
     ax = plt.subplot(111,polar=True)
     ax.bar(dd, ff[:,0],
@@ -173,12 +194,12 @@ def plot_rose(inFF,inDD,ff_steps,dd_range):
     plt.show()
     
 
-def plotpdfs(sets,lablist,ax=None, **kwargs):
+def plot_pdfs(sets,lablist,ax=None, **kwargs):
     """Plots PDFs of data in sets using the respective labels from lablist.
     @parameter sets: iterable set of data
     @parameter lablist: list of strings
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
+    @parameter kwargs : additional keyword arguments passed to plt.plot()"""
     if ax is None:
        ax = plt.gca()
         
@@ -198,14 +219,14 @@ def plotpdfs(sets,lablist,ax=None, **kwargs):
     return ret
 
 
-def plotpdfs_err(sets,lablist,error,ax=None, **kwargs):
+def plot_pdfs_err(sets,lablist,error,ax=None, **kwargs):
     """Plots PDFs of data in sets using the respective labels from lablist with
     a given margin of error.
     @parameter sets: iterable set of data
     @parameter lablist: list of strings
     @parameter error: int or float
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
+    @parameter kwargs : additional keyword arguments passed to plt.plot()"""
     if ax is None:
        ax = plt.gca()
         
@@ -229,12 +250,12 @@ def plotpdfs_err(sets,lablist,error,ax=None, **kwargs):
     
     return ret
 
-def plotcdfs(sets, lablist, ax=None, **kwargs):
+def plot_cdfs(sets, lablist, ax=None, **kwargs):
     """Plots CDFs of data in sets using the respective labels from lablist
     @parameter sets: iterable set of data
     @parameter lablist: list of strings
     @parameter ax: axis passed to function
-    @parameter **kwargs : additional keyword arguments passed to plt.plot()"""
+    @parameter kwargs : additional keyword arguments passed to plt.plot()"""
     if ax is None:
         ax = plt.gca()
         

@@ -1,0 +1,187 @@
+\begin{sphinxtheindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item adapt\_scale() (in module windtunnel), \hyperpage{28}
+  \item adapt\_scale() (windtunnel.Timeseries method), \hyperpage{26}
+  \item adapt\_scale() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item ambient\_conditions() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item apply\_threshold\_concentration() (windtunnel.PuffConcentration method), \hyperpage{24}
+  \item avg\_arrival\_time (windtunnel.PuffConcentration attribute), \hyperpage{24}
+  \item avg\_ascent\_time (windtunnel.PuffConcentration attribute), \hyperpage{24}
+  \item avg\_descent\_time (windtunnel.PuffConcentration attribute), \hyperpage{24}
+  \item avg\_leaving\_time (windtunnel.PuffConcentration attribute), \hyperpage{24}
+  \item avg\_peak\_concentration (windtunnel.PuffConcentration attribute), \hyperpage{24}
+  \item avg\_peak\_time (windtunnel.PuffConcentration attribute), \hyperpage{24}
+
+  \indexspace
+  \bigletter C
+  \item calc\_acorr() (in module windtunnel), \hyperpage{28}
+  \item calc\_alpha() (in module windtunnel), \hyperpage{28}
+  \item calc\_autocorr() (in module windtunnel), \hyperpage{28}
+  \item calc\_c\_star() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_direction() (windtunnel.Timeseries method), \hyperpage{26}
+  \item calc\_direction() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item calc\_equidistant\_timesteps() (windtunnel.Timeseries method), \hyperpage{26}
+  \item calc\_exceedance\_prob() (in module windtunnel), \hyperpage{28}
+  \item calc\_full\_scale\_concentration() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_full\_scale\_flow\_rate() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_full\_scale\_time() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_intervalmean() (in module windtunnel), \hyperpage{28}
+  \item calc\_lux\_data() (in module windtunnel), \hyperpage{28}
+  \item calc\_lux\_data\_wght() (in module windtunnel), \hyperpage{28}
+  \item calc\_magnitude() (windtunnel.Timeseries method), \hyperpage{26}
+  \item calc\_magnitude() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item calc\_model\_mass\_flow\_rate() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_net\_concentration() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_net\_concentration() (windtunnel.PuffConcentration method), \hyperpage{24}
+  \item calc\_perturbations() (windtunnel.Timeseries method), \hyperpage{26}
+  \item calc\_ref\_spectra() (in module windtunnel), \hyperpage{28}
+  \item calc\_release\_length() (windtunnel.PuffConcentration method), \hyperpage{24}
+  \item calc\_spectra() (in module windtunnel), \hyperpage{28}
+  \item calc\_stats() (in module windtunnel), \hyperpage{28}
+  \item calc\_turb\_data() (in module windtunnel), \hyperpage{28}
+  \item calc\_turb\_data\_wght() (in module windtunnel), \hyperpage{29}
+  \item calc\_wind\_stats() (in module windtunnel), \hyperpage{29}
+  \item calc\_wind\_stats\_wght() (in module windtunnel), \hyperpage{29}
+  \item calc\_wtref\_mean() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item calc\_z0() (in module windtunnel), \hyperpage{29}
+  \item check\_against\_avg\_puff() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item check\_directory() (in module windtunnel), \hyperpage{29}
+  \item clear\_zeros() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item convergence\_test\_1() (in module windtunnel), \hyperpage{29}
+  \item convergence\_test\_2() (in module windtunnel), \hyperpage{29}
+  \item convert\_temperature() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item count\_nan\_chunks() (in module windtunnel), \hyperpage{29}
+
+  \indexspace
+  \bigletter D
+  \item detect\_arrival\_time() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item detect\_begin\_release\_index() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item detect\_begin\_release\_period() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item detect\_end\_release\_index() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item detect\_end\_release\_period() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item detect\_leaving\_time() (windtunnel.PuffConcentration method), \hyperpage{25}
+
+  \indexspace
+  \bigletter E
+  \item equ\_dist\_ts() (in module windtunnel), \hyperpage{29}
+  \item equidistant() (in module windtunnel), \hyperpage{29}
+  \item equidistant() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+
+  \indexspace
+  \bigletter F
+  \item find\_block() (in module windtunnel), \hyperpage{29}
+  \item find\_nearest() (in module windtunnel), \hyperpage{29}
+  \item from\_file() (in module windtunnel), \hyperpage{29}
+  \item from\_file() (windtunnel.PointConcentration class method), \hyperpage{23}
+  \item from\_file() (windtunnel.PuffConcentration class method), \hyperpage{25}
+  \item from\_file() (windtunnel.Timeseries class method), \hyperpage{26}
+  \item from\_file() (windtunnel.Timeseries\_nc class method), \hyperpage{27}
+  \item full\_scale\_information() (windtunnel.PointConcentration method), \hyperpage{23}
+
+  \indexspace
+  \bigletter G
+  \item get\_ascent\_time() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_descent\_time() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_dosage() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_files() (in module windtunnel), \hyperpage{29}
+  \item get\_lux\_referencedata() (in module windtunnel), \hyperpage{30}
+  \item get\_pdf\_max() (in module windtunnel), \hyperpage{30}
+  \item get\_peak\_concentration() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_peak\_time() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_percentiles() (in module windtunnel), \hyperpage{30}
+  \item get\_puff\_statistics() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_reference\_spectra() (in module windtunnel), \hyperpage{30}
+  \item get\_residence\_time() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item get\_turb\_referencedata() (in module windtunnel), \hyperpage{30}
+  \item get\_wind\_comps() (in module windtunnel), \hyperpage{30}
+  \item get\_wind\_comps() (windtunnel.Timeseries method), \hyperpage{26}
+  \item get\_wind\_comps() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item get\_wtref() (in module windtunnel), \hyperpage{30}
+  \item get\_wtref() (windtunnel.Timeseries method), \hyperpage{26}
+  \item get\_wtref() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+
+  \indexspace
+  \bigletter M
+  \item mask\_outliers() (in module windtunnel), \hyperpage{30}
+  \item mask\_outliers() (windtunnel.Timeseries method), \hyperpage{26}
+  \item mask\_outliers() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item mask\_outliers\_wght() (in module windtunnel), \hyperpage{30}
+  \item max\_puffs (windtunnel.PuffConcentration attribute), \hyperpage{25}
+  \item mean\_direction (windtunnel.Timeseries attribute), \hyperpage{26}
+  \item mean\_direction (windtunnel.Timeseries\_nc attribute), \hyperpage{27}
+  \item mean\_magnitude (windtunnel.Timeseries attribute), \hyperpage{26}
+  \item mean\_magnitude (windtunnel.Timeseries\_nc attribute), \hyperpage{27}
+
+  \indexspace
+  \bigletter N
+  \item nondimensionalise() (in module windtunnel), \hyperpage{30}
+  \item nondimensionalise() (windtunnel.Timeseries method), \hyperpage{26}
+  \item nondimensionalise() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+
+  \indexspace
+  \bigletter O
+  \item offset\_correction() (windtunnel.PuffConcentration method), \hyperpage{25}
+
+  \indexspace
+  \bigletter P
+  \item pair\_components() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item plot\_boxplots() (in module windtunnel), \hyperpage{31}
+  \item plot\_cdfs() (in module windtunnel), \hyperpage{31}
+  \item plot\_convergence() (in module windtunnel), \hyperpage{31}
+  \item plot\_convergence\_test() (in module windtunnel), \hyperpage{31}
+  \item plot\_DWD\_windrose() (in module windtunnel), \hyperpage{30}
+  \item plot\_fluxes() (in module windtunnel), \hyperpage{31}
+  \item plot\_fluxes\_log() (in module windtunnel), \hyperpage{31}
+  \item plot\_hist() (in module windtunnel), \hyperpage{31}
+  \item plot\_JTFA\_STFT() (in module windtunnel), \hyperpage{30}
+  \item plot\_lux() (in module windtunnel), \hyperpage{31}
+  \item plot\_pdfs() (in module windtunnel), \hyperpage{31}
+  \item plot\_pdfs\_err() (in module windtunnel), \hyperpage{31}
+  \item plot\_perturbation\_rose() (in module windtunnel), \hyperpage{32}
+  \item plot\_Re\_independence() (in module windtunnel), \hyperpage{30}
+  \item plot\_rose() (in module windtunnel), \hyperpage{32}
+  \item plot\_scatter() (in module windtunnel), \hyperpage{32}
+  \item plot\_spectra() (in module windtunnel), \hyperpage{32}
+  \item plot\_stdevs() (in module windtunnel), \hyperpage{32}
+  \item plot\_turb\_int() (in module windtunnel), \hyperpage{32}
+  \item plot\_winddata() (in module windtunnel), \hyperpage{32}
+  \item plot\_winddata\_log() (in module windtunnel), \hyperpage{32}
+  \item plot\_windrose() (in module windtunnel), \hyperpage{32}
+  \item PointConcentration (class in windtunnel), \hyperpage{23}
+  \item power\_law() (in module windtunnel), \hyperpage{33}
+  \item PuffConcentration (class in windtunnel), \hyperpage{24}
+
+  \indexspace
+  \bigletter S
+  \item save2file() (windtunnel.PuffConcentration method), \hyperpage{25}
+  \item save2file() (windtunnel.Timeseries method), \hyperpage{26}
+  \item save2file() (windtunnel.Timeseries\_nc method), \hyperpage{27}
+  \item save2file\_avg() (windtunnel.PointConcentration method), \hyperpage{23}
+  \item save2file\_fs() (windtunnel.PointConcentration method), \hyperpage{24}
+  \item save2file\_ms() (windtunnel.PointConcentration method), \hyperpage{24}
+  \item scaling\_information() (windtunnel.PointConcentration method), \hyperpage{24}
+  \item set\_tau() (windtunnel.Timeseries method), \hyperpage{26}
+
+  \indexspace
+  \bigletter T
+  \item Timeseries (class in windtunnel), \hyperpage{25}
+  \item Timeseries\_nc (class in windtunnel), \hyperpage{27}
+  \item to\_full\_scale() (windtunnel.PointConcentration method), \hyperpage{24}
+  \item tracer\_information() (windtunnel.PointConcentration method), \hyperpage{24}
+  \item transit\_time\_weighted\_flux() (in module windtunnel), \hyperpage{33}
+  \item transit\_time\_weighted\_mean() (in module windtunnel), \hyperpage{33}
+  \item transit\_time\_weighted\_var() (in module windtunnel), \hyperpage{33}
+  \item trunc\_at() (in module windtunnel), \hyperpage{33}
+
+  \indexspace
+  \bigletter W
+  \item weighted\_component\_mean (windtunnel.Timeseries attribute), \hyperpage{26}
+  \item weighted\_component\_mean (windtunnel.Timeseries\_nc attribute), \hyperpage{28}
+  \item weighted\_component\_variance (windtunnel.Timeseries attribute), \hyperpage{27}
+  \item weighted\_component\_variance (windtunnel.Timeseries\_nc attribute), \hyperpage{28}
+  \item wind\_direction\_mag\_less\_180() (windtunnel.Timeseries method), \hyperpage{27}
+  \item windtunnel (module), \hyperpage{23}
+
+\end{sphinxtheindex}
