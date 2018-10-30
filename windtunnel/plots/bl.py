@@ -574,8 +574,9 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None,
         ax = plt.gca()
     
     handles = []   
-    
-    for i, key in enumerate([key for key in data.keys()]):
+    keys = [key for key in data.keys()]
+    keys.sort()
+    for i, key in enumerate(keys):
         l, = ax.plot([i] * len(data[key]), data[key], color='navy',
                       linestyle='None',marker='o', markersize=15)                  
         ax.grid(True)
@@ -584,7 +585,7 @@ def plot_convergence_test(data,wtref=1,ref_length=1,scale=1,ylabel='',ax=None,
     xticklabels=[key for key in data.keys()]
     xticklabels=[int((x*wtref/ref_length)/scale) for x in xticklabels]
     ax.set(xticks=np.arange(0,len(data.keys())+1),
-                  xticklabels=xticklabels,
+                  xticklabels=xticklabels[::10],
                   xlim=(-0.5, len(data.keys())-0.5))
     ax.locator_params(axis='x', nbins=10)
     ax.tick_params(labelsize=12)
